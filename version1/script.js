@@ -259,6 +259,11 @@ function animate() {
                 currentState = 'FADING';
                 stateStartTime = now;
             }
+        } else {
+            // ES LA ÚLTIMA FRASE: Esperar 3 segundos y luego caer
+            if (now - stateStartTime > 1500) {
+                currentState = 'DROPPING';
+            }
         }
     }
     else if (currentState === 'FADING') {
@@ -294,6 +299,24 @@ function animate() {
             
             // Efecto Fractal: La matriz sigue a la cámara en bucle
             linesMesh.position.z = camera.position.z - (camera.position.z % CONFIG.tamanoEspacio);
+        }
+    }
+    else if (currentState === 'DROPPING') {
+        // Efecto de caída al vacío
+        if (activeTextGroup) {
+            activeTextGroup.position.y -= 15; // Velocidad de caída
+            activeTextGroup.rotation.x += 0.02; // Rotación dramática al caer
+            
+            // Si ya bajó lo suficiente (desapareció de pantalla)
+            if (activeTextGroup.position.y < -1000) {
+                sceneText.remove(activeTextGroup);
+                currentState = 'SHOW_NAV';
+                
+                // Mostrar Navbar
+                const nav = document.querySelector('nav');
+                nav.style.opacity = '1';
+                nav.style.pointerEvents = 'auto';
+            }
         }
     }
 
