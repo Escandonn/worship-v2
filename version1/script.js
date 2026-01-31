@@ -115,7 +115,6 @@ let zoomStartZ = 0;
 let triangleGroup = null;
 let triangleMesh = null;
 let circleMesh = null;
-let connectorGroup = null;
 let cardsData = []; // Almacena relación Card DOM <-> Linea 3D
 let lastShuffleTime = 0;
 
@@ -270,7 +269,6 @@ function createTriangle() {
 
 // Función para crear conectores (Líneas)
 function createConnectors() {
-    connectorGroup = new THREE.Group();
     cardsData = [];
 
     // Definición de las 6 Cards con sus colores únicos
@@ -287,31 +285,12 @@ function createConnectors() {
     const domCards = document.querySelectorAll('.info-card');
 
     cardConfigs.forEach((config, i) => {
-        // Línea simple usando Cylinder para poder animar el grosor/largo
-        const geo = new THREE.CylinderGeometry(2, 2, 1, 8); // Líneas más anchas (antes 0.5)
-        geo.rotateX(Math.PI / 2); // Orientar hacia Z (para que lookAt funcione bien)
-        geo.translate(0, 0, 0.5); // Pivote en el inicio (Z=0 a Z=1)
-        const mat = new THREE.MeshBasicMaterial({ color: config.color, transparent: true, opacity: 0 });
-        const line = new THREE.Mesh(geo, mat);
-        
-        // Inicialmente apuntan al centro
-        line.scale.z = 0;
-        connectorGroup.add(line);
-
         // Guardamos la referencia
         cardsData.push({
             domElement: domCards[i],
-            lineMesh: line,
             targetSlot: i // Inicialmente asignados en orden 0-5
         });
     });
-    
-    // Posicionar grupo junto al triángulo
-    if(triangleGroup) {
-        connectorGroup.position.copy(triangleGroup.position);
-        connectorGroup.position.z += 10; // Un poco enfrente
-    }
-    sceneText.add(connectorGroup);
 }
 
 // ==========================================
@@ -489,12 +468,20 @@ function animate() {
 
             // Cambio de posición cada 5 segundos
             if (now - lastShuffleTime > 5000) {
-                // Crear un array de índices [0, 1, 2, 3, 4, 5] y mezclarlo
-                const indices = [0, 1, 2, 3, 4, 5];
-                for (let i = indices.length - 1; i > 0; i--) {
+                // Mezclar solo verticalmente (Izquierda con Izquierda, Derecha con Derecha)
+                const leftIndices = [0, 1, 2];
+                for (let i = leftIndices.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
-                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                    [leftIndices[i], leftIndices[j]] = [leftIndices[j], leftIndices[i]];
                 }
+
+                const rightIndices = [3, 4, 5];
+                for (let i = rightIndices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [rightIndices[i], rightIndices[j]] = [rightIndices[j], rightIndices[i]];
+                }
+                
+                const indices = [...leftIndices, ...rightIndices];
 
                 // Asignar nuevos slots a las cards
                 cardsData.forEach((card, i) => {
@@ -510,29 +497,12 @@ function animate() {
                 lastShuffleTime = now;
             }
             
-            // Sincronizar líneas con el triángulo
-            if (connectorGroup && triangleGroup) {
-                connectorGroup.position.copy(triangleGroup.position);
-            }
-
             // Animar cada card/linea hacia su slot actual
             cardsData.forEach((card) => {
-                const slot = slots[card.targetSlot];
-                const line = card.lineMesh;
-
                 // Mostrar card
                 if (!card.domElement.classList.contains('visible')) {
                     card.domElement.classList.add('visible');
                 }
-
-                // Animar línea hacia la posición del slot
-                line.material.opacity = 1;
-                const targetVec = new THREE.Vector3(slot.x, slot.y, 0);
-                const dist = targetVec.length();
-                
-                // Lerp suave para longitud y orientación
-                line.scale.z = THREE.MathUtils.lerp(line.scale.z, dist, 0.05);
-                line.lookAt(connectorGroup.position.clone().add(targetVec));
             });
         } else {
             // --- LÓGICA MOBILE (Carrusel 3s) ---
