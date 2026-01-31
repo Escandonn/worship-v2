@@ -2,9 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matriz 3D Three.js</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Texto 3D con Three.js</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
     <script type="importmap">
         {
             "imports": {
@@ -13,9 +17,6 @@
             }
         }
     </script>
-</head>
-<body>
-    <!-- El canvas será generado automáticamente por Three.js -->
-    <script type="module" src="script.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
