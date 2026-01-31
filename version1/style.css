@@ -9,6 +9,9 @@
     --color-inicio: #00d4ff;
     --color-sobre: #ff0055;
     --color-acerca: #00ff88;
+    --color-desarrollo: #9d00ff;
+    --color-marketing: #ff8800;
+    --color-soporte: #ffff00;
 }
 
 * { box-sizing: border-box; }
@@ -152,4 +155,100 @@ nav {
 @media (max-width: 600px) {
     .nav-container { gap: 10px; }
     .nav-item { font-size: 0.7rem; padding: 8px 12px; }
+}
+
+/* --- INFO CARDS --- */
+#cards-container {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    pointer-events: none; /* Click through */
+}
+
+.info-card {
+    position: absolute; /* Posicionamiento absoluto para moverlas */
+    background: rgba(0, 0, 0, 0.6);
+    border-left: 4px solid #fff;
+    padding: 1.5rem;
+    width: 300px;
+    text-align: left; /* Alineación fija para evitar saltos visuales */
+    backdrop-filter: blur(5px);
+    opacity: 0;
+    transition: all 1s cubic-bezier(0.25, 1, 0.5, 1); /* Transición suave para movimiento */
+}
+
+.info-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.info-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #ddd;
+    line-height: 1.4;
+}
+
+/* --- SLOTS DE POSICIÓN (DESKTOP) --- */
+/* Izquierda */
+.slot-0, .slot-1, .slot-2 {
+    left: 5%;
+    border-left: none;
+    border-right: 4px solid #fff;
+}
+
+/* Derecha */
+.slot-3, .slot-4, .slot-5 {
+    left: calc(95% - 300px); /* Posición calculada para permitir animación 'left' */
+    border-left: 4px solid #fff;
+    border-right: none;
+}
+
+/* Alturas */
+.slot-0, .slot-3 { top: 20%; }
+.slot-1, .slot-4 { top: 50%; transform: translateY(-50%); }
+.slot-2, .slot-5 { top: 80%; transform: translateY(-100%); }
+
+/* Colores de borde según la card (coinciden con navbar/líneas) */
+.card-1 { border-color: var(--color-inicio) !important; }
+.card-2 { border-color: var(--color-sobre) !important; }
+.card-3 { border-color: var(--color-acerca) !important; }
+.card-4 { border-color: var(--color-desarrollo) !important; }
+.card-5 { border-color: var(--color-marketing) !important; }
+.card-6 { border-color: var(--color-soporte) !important; }
+
+/* Clase para activar la animación */
+.info-card.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* --- MOBILE CARDS --- */
+@media (max-width: 800px) {
+    #cards-container {
+        justify-content: center;
+        align-items: center;
+        display: flex; /* Reactivar flex para centrado */
+    }
+    
+    .info-card {
+        position: absolute; /* Superpuestas para el carrusel */
+        left: auto; /* Reset desktop styles */
+        right: auto;
+        top: auto;
+        width: 80%;
+        max-width: 350px;
+        text-align: center;
+        border-left: none;
+        border-top: 4px solid #fff;
+        transform: translateY(20px); /* Slide desde abajo */
+        /* Reset de estilos desktop izquierda */
+        border-right: none;
+    }
+
+    .info-card.visible {
+        transform: translateY(0);
+    }
 }

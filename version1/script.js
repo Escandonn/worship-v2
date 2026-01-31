@@ -24,7 +24,7 @@ const CONFIG = {
     
     // Configuración Triángulo
     triangleScale: 90,         // Más grande en PC (antes 50)
-    triangleOffsetX: -350,     // Más a la izquierda para compensar el tamaño
+    triangleOffsetX: 0,        // CENTRADO (Eje de la composición)
     duracionTriangulo: 5000,   // Transición más lenta (5 segundos)
     
     tamanoEspacio: 1000, 
@@ -115,6 +115,13 @@ let zoomStartZ = 0;
 let triangleGroup = null;
 let triangleMesh = null;
 let circleMesh = null;
+let connectorGroup = null;
+let cardsData = []; // Almacena relación Card DOM <-> Linea 3D
+let lastShuffleTime = 0;
+
+// Variables Mobile
+let mobileStep = 0;
+let lastMobileChange = 0;
 
 // Materiales globales (Transparentes para permitir Fade Out)
 const mainMat = new THREE.MeshPhongMaterial({ 
@@ -261,6 +268,52 @@ function createTriangle() {
     sceneText.add(triangleGroup);
 }
 
+// Función para crear conectores (Líneas)
+function createConnectors() {
+    connectorGroup = new THREE.Group();
+    cardsData = [];
+
+    // Definición de las 6 Cards con sus colores únicos
+    // El orden coincide con el DOM: 4, 5, 6, 1, 2, 3
+    const cardConfigs = [
+        { id: 'card-4', color: 0x9d00ff }, // Desarrollo (Purple)
+        { id: 'card-5', color: 0xff8800 }, // Marketing (Orange)
+        { id: 'card-6', color: 0xffff00 }, // Soporte (Yellow)
+        { id: 'card-1', color: 0x00d4ff }, // Innovación (Cyan)
+        { id: 'card-2', color: 0xff0055 }, // Diseño (Pink)
+        { id: 'card-3', color: 0x00ff88 }  // Estrategia (Green)
+    ];
+
+    const domCards = document.querySelectorAll('.info-card');
+
+    cardConfigs.forEach((config, i) => {
+        // Línea simple usando Cylinder para poder animar el grosor/largo
+        const geo = new THREE.CylinderGeometry(2, 2, 1, 8); // Líneas más anchas (antes 0.5)
+        geo.rotateX(Math.PI / 2); // Orientar hacia Z (para que lookAt funcione bien)
+        geo.translate(0, 0, 0.5); // Pivote en el inicio (Z=0 a Z=1)
+        const mat = new THREE.MeshBasicMaterial({ color: config.color, transparent: true, opacity: 0 });
+        const line = new THREE.Mesh(geo, mat);
+        
+        // Inicialmente apuntan al centro
+        line.scale.z = 0;
+        connectorGroup.add(line);
+
+        // Guardamos la referencia
+        cardsData.push({
+            domElement: domCards[i],
+            lineMesh: line,
+            targetSlot: i // Inicialmente asignados en orden 0-5
+        });
+    });
+    
+    // Posicionar grupo junto al triángulo
+    if(triangleGroup) {
+        connectorGroup.position.copy(triangleGroup.position);
+        connectorGroup.position.z += 10; // Un poco enfrente
+    }
+    sceneText.add(connectorGroup);
+}
+
 // ==========================================
 // ANIMACIÓN
 // ==========================================
@@ -399,6 +452,121 @@ function animate() {
                 circleMesh.scale.set(pulse, pulse, pulse);
             }
         }
+
+        if (progress >= 1) {
+            currentState = 'WAITING_INTERACTION';
+            stateStartTime = now;
+        }
+    }
+    else if (currentState === 'WAITING_INTERACTION') {
+        // Pausa estratégica de 2 segundos
+        if (now - stateStartTime > 2000) {
+            currentState = 'SHOW_CARDS';
+            stateStartTime = now;
+            createConnectors();
+            
+            // Inicializar lógica Mobile si es necesario
+            if (window.innerWidth < 800) {
+                lastMobileChange = now - 3000; // Forzar cambio inmediato (ajustado a 3s)
+            }
+        }
+    }
+    else if (currentState === 'SHOW_CARDS') {
+        const isMobile = window.innerWidth < 800;
+
+        if (!isMobile) {
+            // --- LÓGICA DESKTOP ---
+            
+            // Definición de los 6 Slots (Posiciones 3D y Clases CSS)
+            const slots = [
+                { x: -400, y: 150, css: 'slot-0' }, // Izq Arriba
+                { x: -400, y: 0,   css: 'slot-1' }, // Izq Centro
+                { x: -400, y: -150, css: 'slot-2' }, // Izq Abajo
+                { x: 400, y: 150, css: 'slot-3' }, // Der Arriba
+                { x: 400, y: 0,   css: 'slot-4' }, // Der Centro
+                { x: 400, y: -150, css: 'slot-5' }  // Der Abajo
+            ];
+
+            // Cambio de posición cada 5 segundos
+            if (now - lastShuffleTime > 5000) {
+                // Crear un array de índices [0, 1, 2, 3, 4, 5] y mezclarlo
+                const indices = [0, 1, 2, 3, 4, 5];
+                for (let i = indices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                }
+
+                // Asignar nuevos slots a las cards
+                cardsData.forEach((card, i) => {
+                    // Remover clases de slot anteriores
+                    slots.forEach(s => card.domElement.classList.remove(s.css));
+                    
+                    // Asignar nuevo slot
+                    const newSlotIndex = indices[i];
+                    card.targetSlot = newSlotIndex;
+                    card.domElement.classList.add(slots[newSlotIndex].css);
+                });
+
+                lastShuffleTime = now;
+            }
+            
+            // Sincronizar líneas con el triángulo
+            if (connectorGroup && triangleGroup) {
+                connectorGroup.position.copy(triangleGroup.position);
+            }
+
+            // Animar cada card/linea hacia su slot actual
+            cardsData.forEach((card) => {
+                const slot = slots[card.targetSlot];
+                const line = card.lineMesh;
+
+                // Mostrar card
+                if (!card.domElement.classList.contains('visible')) {
+                    card.domElement.classList.add('visible');
+                }
+
+                // Animar línea hacia la posición del slot
+                line.material.opacity = 1;
+                const targetVec = new THREE.Vector3(slot.x, slot.y, 0);
+                const dist = targetVec.length();
+                
+                // Lerp suave para longitud y orientación
+                line.scale.z = THREE.MathUtils.lerp(line.scale.z, dist, 0.05);
+                line.lookAt(connectorGroup.position.clone().add(targetVec));
+            });
+        } else {
+            // --- LÓGICA MOBILE (Carrusel 3s) ---
+            if (now - lastMobileChange > 3000) {
+                const cards = document.querySelectorAll('.info-card');
+                
+                // Ocultar todas
+                cards.forEach(c => c.classList.remove('visible'));
+                
+                // Mostrar actual
+                const currentCard = cards[mobileStep % cards.length]; // Ciclo 0, 1, 2...
+                if (currentCard) currentCard.classList.add('visible');
+
+                // Mover Triángulo según la card
+                // Card 1 (idx 0): Triángulo baja (Y negativo)
+                // Card 2 (idx 1): Triángulo sube (Y positivo)
+                // Card 3 (idx 2): Triángulo centro
+                let targetY = 0;
+                if (mobileStep % 3 === 0) targetY = -150; // Card 1 arriba, Triángulo baja
+                else if (mobileStep % 3 === 1) targetY = 150;  // Card 2 abajo, Triángulo sube
+                else targetY = 0;
+
+                // Guardar objetivo en userData para animarlo suave
+                if (triangleGroup) triangleGroup.userData.targetY = targetY;
+
+                mobileStep++;
+                lastMobileChange = now;
+            }
+
+            // Animación suave del triángulo (Lerp)
+            if (triangleGroup && triangleGroup.userData.targetY !== undefined) {
+                triangleGroup.position.y += (triangleGroup.userData.targetY - triangleGroup.position.y) * 0.05;
+            }
+        }
     }
 
     renderer.clear();
@@ -424,7 +592,7 @@ function handleResize() {
     } else {
         if(activeTextGroup) activeTextGroup.scale.set(1, 1, 1);
         if(activeTextGroup) activeTextGroup.position.y = 100;
-        CONFIG.triangleOffsetX = -350; // Izquierda en desktop (más separado)
+        CONFIG.triangleOffsetX = 0; // CENTRADO en desktop (Eje central)
         if(triangleGroup) triangleGroup.scale.set(1, 1, 1); // Tamaño completo en PC
     }
 }
