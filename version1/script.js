@@ -504,6 +504,12 @@ function animate() {
                     card.domElement.classList.add('visible');
                 }
             });
+
+            // Mostrar Chatbot después de 2 segundos de mostrar las cards
+            const chatbot = document.getElementById('chatbot-container');
+            if (chatbot && !chatbot.classList.contains('visible') && (now - stateStartTime > 2000)) {
+                chatbot.classList.add('visible');
+            }
         } else {
             // --- LÓGICA MOBILE (Carrusel 3s) ---
             if (now - lastMobileChange > 3000) {
@@ -535,6 +541,12 @@ function animate() {
             // Animación suave del triángulo (Lerp)
             if (triangleGroup && triangleGroup.userData.targetY !== undefined) {
                 triangleGroup.position.y += (triangleGroup.userData.targetY - triangleGroup.position.y) * 0.05;
+            }
+
+            // Mostrar Chatbot en móvil también
+            const chatbot = document.getElementById('chatbot-container');
+            if (chatbot && !chatbot.classList.contains('visible') && (now - stateStartTime > 2000)) {
+                chatbot.classList.add('visible');
             }
         }
     }
@@ -570,3 +582,17 @@ function handleResize() {
 window.addEventListener('resize', handleResize);
 handleResize(); // Ejecutar al inicio para asegurar el centrado
 animate();
+
+// ==========================================
+// LÓGICA CHATBOT (Expandir/Contraer)
+// ==========================================
+const chatbotContainer = document.getElementById('chatbot-container');
+const chatbotHeader = document.getElementById('chatbot-header');
+
+if (chatbotHeader && chatbotContainer) {
+    chatbotHeader.addEventListener('click', () => {
+        chatbotContainer.classList.toggle('expanded');
+        // Aquí podrías cargar la URL real del iframe si no quieres cargarla al inicio
+        // document.getElementById('chatbot-frame').src = "URL_DEL_BOT";
+    });
+}

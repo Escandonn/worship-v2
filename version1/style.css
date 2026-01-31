@@ -252,3 +252,94 @@ nav {
         transform: translateY(0);
     }
 }
+
+/* --- CHATBOT ASESOR VIRTUAL RISP --- */
+#chatbot-container {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(150%); /* Oculto inicialmente abajo */
+    width: 90%;
+    max-width: 400px;
+    height: 60px; /* Altura colapsada */
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid var(--accent);
+    border-bottom: none;
+    border-radius: 15px 15px 0 0;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    overflow: visible; /* Permitir que el texto hint salga del contenedor */
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+    transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1), 
+                height 1.5s cubic-bezier(0.77, 0, 0.175, 1), 
+                width 1.5s cubic-bezier(0.77, 0, 0.175, 1), 
+                max-width 1.5s cubic-bezier(0.77, 0, 0.175, 1),
+                border-radius 1s ease;
+}
+
+/* Estado Visible (Barra inferior) */
+#chatbot-container.visible {
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Estado Expandido (Pantalla Completa) */
+#chatbot-container.expanded {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    border-radius: 0;
+    border: none;
+}
+
+#chatbot-header {
+    height: 60px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    cursor: pointer;
+    border-radius: 15px 15px 0 0; /* Borde redondeado aquí también */
+    background: linear-gradient(90deg, rgba(0,255,136,0.1) 0%, rgba(0,0,0,0) 100%);
+}
+
+.chatbot-status {
+    width: 10px;
+    height: 10px;
+    background-color: var(--accent);
+    border-radius: 50%;
+    margin-right: 15px;
+    box-shadow: 0 0 10px var(--accent);
+    animation: pulse 2s infinite;
+}
+
+.chatbot-title { font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; flex-grow: 1; }
+#chatbot-toggle { background: none; border: none; color: var(--accent); font-size: 1.2rem; cursor: pointer; transition: transform 0.5s; }
+#chatbot-container.expanded #chatbot-toggle { transform: rotate(180deg); }
+#chatbot-frame { flex-grow: 1; width: 100%; border: none; background: #050505; }
+
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+/* Texto flotante "Presiona y habla" */
+.chatbot-hint {
+    position: absolute;
+    top: -30px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    pointer-events: none;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    animation: floatHint 2s ease-in-out infinite;
+}
+
+#chatbot-container.expanded .chatbot-hint { opacity: 0; transition: opacity 0.3s; }
+
+@keyframes floatHint {
+    0%, 100% { transform: translateY(0); opacity: 0.8; }
+    50% { transform: translateY(-5px); opacity: 1; }
+}
