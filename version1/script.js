@@ -10,16 +10,20 @@ const CONFIG = {
     colorLineas: 0xffffff,
     
     // Configuración del Texto
-    textoContenido: "Bienvenido a worship",
+    frases: ["Bienvenido a worship", "SOMOS EL SIGUIENTE NIVEL EN PAGINAS WEB"],
     colorMain: 0x2266ff,       // Azul (App.js)
     colorBorder: 0xffffff,     // Blanco (App.js)
     typingSpeed: 100,
     
     // Escala para adaptar la lógica de app.js (Radio 40) al mundo de version1 (Z 800)
     textScale: 70,             
+
+    // Tiempos y Distancias
+    duracionZoom: 2000,        // 2 segundos exactos de zoom
+    distanciaZoom: 400,       // Distancia a recorrer (sincronizada con el espacio)
     
     tamanoEspacio: 1000, 
-    divisiones: 12, 
+    divisiones: 16, 
     velocidadRotacionX: 0.001,
     velocidadRotacionY: 0.0015,
     campoDeVision: 75
@@ -90,82 +94,123 @@ scene.add(linesMesh);
 // LÓGICA DE TEXTO (SOBRESALIENTE)
 // ==========================================
 
-const textGroup = new THREE.Group();
-sceneText.add(textGroup);
+let loadedFont = null;
+let activeTextGroup = null;
+let activeCharGroups = [];
+let currentPhraseIndex = 0;
 
-const charGroups = []; // Grupos de letras (Borde + Relleno)
+// Estados de la animación
+let currentState = 'LOADING'; // LOADING, SETUP, TYPING, WAITING, FADING, ZOOMING
+let stateStartTime = 0;
+let lastTypeTime = 0;
+let typeIndex = 0;
+let zoomStartZ = 0;
+
+// Materiales globales (Transparentes para permitir Fade Out)
+const mainMat = new THREE.MeshPhongMaterial({ 
+    color: CONFIG.colorMain, 
+    shininess: 100,
+    transparent: true,
+    opacity: 1
+});
+const borderMat = new THREE.MeshBasicMaterial({ 
+    color: CONFIG.colorBorder,
+    transparent: true,
+    opacity: 1
+});
+
+// Función para crear el texto dinámicamente
+function createTextPhrase(textString) {
+    if (activeTextGroup) {
+        sceneText.remove(activeTextGroup);
+    }
+
+    activeTextGroup = new THREE.Group();
+    activeCharGroups = [];
+    sceneText.add(activeTextGroup);
+
+    // 1. Lógica de división de líneas para textos largos
+    let lines = [];
+    if (textString.length > 20) {
+        const words = textString.split(' ');
+        const mid = Math.ceil(words.length / 2);
+        lines.push(words.slice(0, mid).join(' '));
+        lines.push(words.slice(mid).join(' '));
+    } else {
+        lines.push(textString);
+    }
+
+    const radius = 40 * CONFIG.textScale;
+    const anglePerChar = 0.035; // Espaciado fijo por letra para evitar solapamiento
+
+    // Centrado vertical del bloque de texto
+    const lineHeight = 1.2 * CONFIG.textScale;
+    const totalHeightOffset = (lines.length - 1) * lineHeight / 2;
+
+    lines.forEach((lineStr, lineIndex) => {
+        // Arco dinámico: crece según la cantidad de letras
+        const totalArc = Math.max(0.3, lineStr.length * anglePerChar);
+        const lineY = (lineIndex * -lineHeight) + totalHeightOffset;
+
+        for (let i = 0; i < lineStr.length; i++) {
+            const char = lineStr[i];
+            if (char === " ") {
+                activeCharGroups.push(null);
+                continue;
+            }
+
+            const letterContainer = new THREE.Group();
+
+            // Geometría Principal
+            const mainGeo = new TextGeometry(char, {
+                font: loadedFont,
+                size: 0.8 * CONFIG.textScale,
+                height: 0.2 * CONFIG.textScale,
+                bevelEnabled: true,
+                bevelThickness: 0.02 * CONFIG.textScale,
+                bevelSize: 0.02 * CONFIG.textScale
+            });
+            mainGeo.center();
+            const mainMesh = new THREE.Mesh(mainGeo, mainMat);
+
+            // Geometría Borde
+            const borderGeo = new TextGeometry(char, {
+                font: loadedFont,
+                size: 0.85 * CONFIG.textScale,
+                height: 0.1 * CONFIG.textScale,
+                bevelEnabled: true,
+                bevelThickness: 0.05 * CONFIG.textScale,
+                bevelSize: 0.05 * CONFIG.textScale
+            });
+            borderGeo.center();
+            const borderMesh = new THREE.Mesh(borderGeo, borderMat);
+            borderMesh.position.z = -0.15 * CONFIG.textScale;
+
+            letterContainer.add(borderMesh);
+            letterContainer.add(mainMesh);
+
+            // Posición Curva
+            let angle = 0;
+            if (lineStr.length > 1) {
+                angle = (i / (lineStr.length - 1) - 0.5) * totalArc;
+            }
+
+            letterContainer.position.x = Math.sin(angle) * radius;
+            letterContainer.position.y = (Math.cos(angle) * radius) - radius + lineY;
+            letterContainer.rotation.z = -angle;
+
+            letterContainer.visible = false;
+            activeTextGroup.add(letterContainer);
+            activeCharGroups.push(letterContainer);
+        }
+    });
+}
 
 const loader = new FontLoader();
 loader.load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json', (font) => {
-    
-    // Parámetros de la lógica original (app.js) escalados
-    const textString = CONFIG.textoContenido;
-    const radius = 40 * CONFIG.textScale;  // Radio masivo para la curva
-    const totalArc = 0.5;                  // Apertura del arco
-    
-    for (let i = 0; i < textString.length; i++) {
-        const char = textString[i];
-        if (char === " ") {
-            charGroups.push(null);
-            continue;
-        }
-
-        // 1. Grupo para la letra individual
-        const letterContainer = new THREE.Group();
-
-        // 2. Geometría Principal (Azul) - Lógica app.js escalada
-        const mainGeo = new TextGeometry(char, {
-            font: font,
-            size: 0.8 * CONFIG.textScale,
-            height: 0.2 * CONFIG.textScale,
-            bevelEnabled: true,
-            bevelThickness: 0.02 * CONFIG.textScale,
-            bevelSize: 0.02 * CONFIG.textScale
-        });
-        mainGeo.center();
-        const mainMat = new THREE.MeshPhongMaterial({ color: CONFIG.colorMain, shininess: 100 });
-        const mainMesh = new THREE.Mesh(mainGeo, mainMat);
-
-        // 3. Geometría del Borde (Blanca) - Lógica app.js escalada
-        const borderGeo = new TextGeometry(char, {
-            font: font,
-            size: 0.85 * CONFIG.textScale,
-            height: 0.1 * CONFIG.textScale,
-            bevelEnabled: true,
-            bevelThickness: 0.05 * CONFIG.textScale,
-            bevelSize: 0.05 * CONFIG.textScale
-        });
-        borderGeo.center();
-        const borderMat = new THREE.MeshBasicMaterial({ color: CONFIG.colorBorder });
-        const borderMesh = new THREE.Mesh(borderGeo, borderMat);
-        borderMesh.position.z = -0.15 * CONFIG.textScale; // Detrás
-
-        letterContainer.add(borderMesh);
-        letterContainer.add(mainMesh);
-
-        // --- CÁLCULO DE POSICIÓN CURVA (Lógica app.js) ---
-        const angle = (i / (textString.length - 1) - 0.5) * totalArc;
-        letterContainer.position.x = Math.sin(angle) * radius;
-        letterContainer.position.y = (Math.cos(angle) * radius) - radius;
-        letterContainer.rotation.z = -angle;
-
-        letterContainer.visible = false;
-        textGroup.add(letterContainer);
-        charGroups.push(letterContainer);
-    }
-
-    // Iniciar animación tipo máquina de escribir
-    startTypewriter(0);
+    loadedFont = font;
+    currentState = 'SETUP';
 });
-
-function startTypewriter(index) {
-    if (index < charGroups.length) {
-        if (charGroups[index]) {
-            charGroups[index].visible = true;
-        }
-        setTimeout(() => startTypewriter(index + 1), CONFIG.typingSpeed);
-    }
-}
 
 // ==========================================
 // ANIMACIÓN
@@ -173,9 +218,84 @@ function startTypewriter(index) {
 
 function animate() {
     requestAnimationFrame(animate);
+    const now = Date.now();
 
     linesMesh.rotation.x += CONFIG.velocidadRotacionX;
     linesMesh.rotation.y += CONFIG.velocidadRotacionY;
+
+    // --- MÁQUINA DE ESTADOS ---
+    if (currentState === 'SETUP') {
+        mainMat.opacity = 1;
+        borderMat.opacity = 1;
+        createTextPhrase(CONFIG.frases[currentPhraseIndex]);
+        
+        // FIX: Anclar el texto a la cámara para mantener el tamaño constante
+        if (activeTextGroup) {
+            activeTextGroup.position.z = camera.position.z - 800;
+        }
+
+        handleResize(); // Ajustar tamaño/posición
+        
+        currentState = 'TYPING';
+        typeIndex = 0;
+        lastTypeTime = now;
+    }
+    else if (currentState === 'TYPING') {
+        if (now - lastTypeTime > CONFIG.typingSpeed) {
+            if (typeIndex < activeCharGroups.length) {
+                if (activeCharGroups[typeIndex]) activeCharGroups[typeIndex].visible = true;
+                typeIndex++;
+                lastTypeTime = now;
+            } else {
+                currentState = 'WAITING';
+                stateStartTime = now;
+            }
+        }
+    }
+    else if (currentState === 'WAITING') {
+        // Solo procedemos al zoom si NO es la última frase
+        if (currentPhraseIndex < CONFIG.frases.length - 1) {
+            if (now - stateStartTime > 2000) { 
+                currentState = 'FADING';
+                stateStartTime = now;
+            }
+        }
+    }
+    else if (currentState === 'FADING') {
+        const progress = (now - stateStartTime) / 1000; // 1 segundo para desaparecer
+        if (progress >= 1) {
+            mainMat.opacity = 0;
+            borderMat.opacity = 0;
+            if (activeTextGroup) activeTextGroup.visible = false;
+            
+            currentState = 'ZOOMING';
+            stateStartTime = now;
+            zoomStartZ = camera.position.z;
+        } else {
+            mainMat.opacity = 1 - progress;
+            borderMat.opacity = 1 - progress;
+        }
+    }
+    else if (currentState === 'ZOOMING') {
+        const progress = (now - stateStartTime) / CONFIG.duracionZoom;
+        
+        if (progress >= 1) {
+            // Fin del zoom
+            camera.position.z = zoomStartZ - CONFIG.distanciaZoom;
+            linesMesh.position.z = camera.position.z - (camera.position.z % CONFIG.tamanoEspacio);
+            
+            // Siguiente frase
+            currentPhraseIndex++;
+            currentState = 'SETUP';
+        } else {
+            // Movimiento
+            const currentZ = zoomStartZ - (CONFIG.distanciaZoom * progress);
+            camera.position.z = currentZ;
+            
+            // Efecto Fractal: La matriz sigue a la cámara en bucle
+            linesMesh.position.z = camera.position.z - (camera.position.z % CONFIG.tamanoEspacio);
+        }
+    }
 
     renderer.clear();
     renderer.render(scene, camera);     // Renderiza primero el fondo/líneas
@@ -193,11 +313,11 @@ function handleResize() {
     
     // Lógica responsive mejorada para evitar que el texto se salga
     if (width < 600) {
-        textGroup.scale.set(0.45, 0.45, 0.45); // Escala reducida para móviles
-        textGroup.position.y = 50;             // Altura ajustada para móvil
+        if(activeTextGroup) activeTextGroup.scale.set(0.35, 0.35, 0.35); // Escala más segura para textos largos
+        if(activeTextGroup) activeTextGroup.position.y = 60;             // Ajuste vertical para compensar las 2 líneas
     } else {
-        textGroup.scale.set(1, 1, 1);
-        textGroup.position.y = 100;            // Altura original para desktop
+        if(activeTextGroup) activeTextGroup.scale.set(1, 1, 1);
+        if(activeTextGroup) activeTextGroup.position.y = 100;
     }
 }
 
