@@ -22,6 +22,11 @@ const CONFIG = {
     duracionZoom: 2000,        // 2 segundos exactos de zoom
     distanciaZoom: 400,       // Distancia a recorrer (sincronizada con el espacio)
     
+    // Configuración Triángulo
+    triangleScale: 90,         // Más grande en PC (antes 50)
+    triangleOffsetX: -350,     // Más a la izquierda para compensar el tamaño
+    duracionTriangulo: 5000,   // Transición más lenta (5 segundos)
+    
     tamanoEspacio: 1000, 
     divisiones: 16, 
     velocidadRotacionX: 0.001,
@@ -105,6 +110,11 @@ let stateStartTime = 0;
 let lastTypeTime = 0;
 let typeIndex = 0;
 let zoomStartZ = 0;
+
+// Variables para el triángulo
+let triangleGroup = null;
+let triangleMesh = null;
+let circleMesh = null;
 
 // Materiales globales (Transparentes para permitir Fade Out)
 const mainMat = new THREE.MeshPhongMaterial({ 
@@ -212,6 +222,45 @@ loader.load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_bold.type
     currentState = 'SETUP';
 });
 
+// Función para crear el Triángulo y Círculo
+function createTriangle() {
+    if (triangleGroup) sceneText.remove(triangleGroup);
+    
+    triangleGroup = new THREE.Group();
+    const s = CONFIG.triangleScale;
+
+    // 1. Triángulo (TubeGeometry)
+    const points = [
+        new THREE.Vector3(0, 1.5 * s, 0),
+        new THREE.Vector3(1.5 * s, -1 * s, 0),
+        new THREE.Vector3(-1.5 * s, -1 * s, 0),
+        new THREE.Vector3(0, 1.5 * s, 0)
+    ];
+    const path = new THREE.CatmullRomCurve3(points);
+    const tubeGeo = new THREE.TubeGeometry(path, 64, 0.15 * s, 8, false);
+    const tubeMat = new THREE.MeshStandardMaterial({ 
+        color: 0xff00ff, // Magenta Neón
+        emissive: 0xff00ff,
+        emissiveIntensity: 2
+    });
+    triangleMesh = new THREE.Mesh(tubeGeo, tubeMat);
+    triangleGroup.add(triangleMesh);
+
+    // 2. Círculo (TorusGeometry)
+    const torusGeo = new THREE.TorusGeometry(2.5 * s, 0.05 * s, 16, 100);
+    const torusMat = new THREE.MeshStandardMaterial({ 
+        color: 0x00ffff, // Cian Neón
+        emissive: 0x00ffff,
+        emissiveIntensity: 2,
+        transparent: true,
+        opacity: 0 // Oculto al inicio
+    });
+    circleMesh = new THREE.Mesh(torusGeo, torusMat);
+    triangleGroup.add(circleMesh);
+
+    sceneText.add(triangleGroup);
+}
+
 // ==========================================
 // ANIMACIÓN
 // ==========================================
@@ -316,6 +365,38 @@ function animate() {
                 const nav = document.querySelector('nav');
                 nav.style.opacity = '1';
                 nav.style.pointerEvents = 'auto';
+
+                // Iniciar animación del triángulo
+                createTriangle();
+                currentState = 'ANIMATE_TRIANGLE';
+                stateStartTime = now;
+            }
+        }
+    }
+    else if (currentState === 'ANIMATE_TRIANGLE') {
+        const progress = Math.min((now - stateStartTime) / CONFIG.duracionTriangulo, 1);
+        
+        // Posición relativa a la cámara (misma profundidad que el texto)
+        const zPos = camera.position.z - 800;
+        const startX = -1500; // Entra desde la izquierda fuera de pantalla
+        const endX = CONFIG.triangleOffsetX;
+        
+        if (triangleGroup) {
+            triangleGroup.position.z = zPos;
+            
+            // Movimiento suave (Ease out)
+            const ease = 1 - Math.pow(1 - progress, 3);
+            triangleGroup.position.x = startX + (endX - startX) * ease;
+            
+            // Rotación de entrada y continua
+            triangleMesh.rotation.x = ease * Math.PI * 2;
+            triangleMesh.rotation.y += 0.01;
+
+            // Aparición del círculo al final
+            if (progress > 0.8) {
+                if (circleMesh.material.opacity < 1) circleMesh.material.opacity += 0.02;
+                const pulse = 1 + Math.sin(now * 0.005) * 0.05;
+                circleMesh.scale.set(pulse, pulse, pulse);
             }
         }
     }
@@ -338,9 +419,13 @@ function handleResize() {
     if (width < 600) {
         if(activeTextGroup) activeTextGroup.scale.set(0.35, 0.35, 0.35); // Escala más segura para textos largos
         if(activeTextGroup) activeTextGroup.position.y = 60;             // Ajuste vertical para compensar las 2 líneas
+        CONFIG.triangleOffsetX = 0; // Centrado en móvil
+        if(triangleGroup) triangleGroup.scale.set(0.4, 0.4, 0.4); // Reducir triángulo en móvil
     } else {
         if(activeTextGroup) activeTextGroup.scale.set(1, 1, 1);
         if(activeTextGroup) activeTextGroup.position.y = 100;
+        CONFIG.triangleOffsetX = -350; // Izquierda en desktop (más separado)
+        if(triangleGroup) triangleGroup.scale.set(1, 1, 1); // Tamaño completo en PC
     }
 }
 
