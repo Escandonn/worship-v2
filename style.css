@@ -6,12 +6,12 @@
     --vh: 1vh; /* será actualizado por JS para móviles */
     
     /* Variables Navbar */
-    --color-inicio: #00d4ff;
-    --color-sobre: #ff0055;
-    --color-acerca: #00ff88;
-    --color-desarrollo: #9d00ff;
-    --color-marketing: #ff8800;
-    --color-soporte: #ffff00;
+    --color-inicio: #ffffff;
+    --color-sobre: #e0e0e0;
+    --color-acerca: #cccccc;
+    --color-desarrollo: #ffffff;
+    --color-marketing: #e0e0e0;
+    --color-soporte: #cccccc;
 }
 
 * { box-sizing: border-box; }
@@ -143,9 +143,9 @@ nav {
 }
 
 /* Capas de color personalizadas para cada link */
-.nav-item.inicio { text-shadow: 2px 2px 0px var(--color-inicio), 4px 4px 0px rgba(0,0,0,0.5); }
-.nav-item.sobre { text-shadow: 2px 2px 0px var(--color-sobre), 4px 4px 0px rgba(0,0,0,0.5); }
-.nav-item.acerca { text-shadow: 2px 2px 0px var(--color-acerca), 4px 4px 0px rgba(0,0,0,0.5); }
+.nav-item.inicio { text-shadow: 0 0 10px var(--color-inicio); }
+.nav-item.sobre { text-shadow: 0 0 10px var(--color-sobre); }
+.nav-item.acerca { text-shadow: 0 0 10px var(--color-acerca); }
 
 .nav-item:hover {
     transform: translateY(-5px) scale(1.1);
@@ -212,12 +212,12 @@ nav {
 .slot-2, .slot-5 { top: 80%; transform: translateY(-100%); }
 
 /* Colores de borde según la card (coinciden con navbar/líneas) */
-.card-1 { border-color: var(--color-inicio) !important; }
-.card-2 { border-color: var(--color-sobre) !important; }
-.card-3 { border-color: var(--color-acerca) !important; }
-.card-4 { border-color: var(--color-desarrollo) !important; }
-.card-5 { border-color: var(--color-marketing) !important; }
-.card-6 { border-color: var(--color-soporte) !important; }
+.card-1 { border-color: var(--color-inicio) !important; box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
+.card-2 { border-color: var(--color-sobre) !important; box-shadow: 0 0 15px rgba(224, 224, 224, 0.2); }
+.card-3 { border-color: var(--color-acerca) !important; box-shadow: 0 0 15px rgba(204, 204, 204, 0.2); }
+.card-4 { border-color: var(--color-desarrollo) !important; box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
+.card-5 { border-color: var(--color-marketing) !important; box-shadow: 0 0 15px rgba(224, 224, 224, 0.2); }
+.card-6 { border-color: var(--color-soporte) !important; box-shadow: 0 0 15px rgba(204, 204, 204, 0.2); }
 
 /* Clase para activar la animación */
 .info-card.visible {
