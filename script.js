@@ -661,7 +661,7 @@ async function getFileSHA(path) {
 
 // Función para leer la respuesta (Polling)
 async function pollForResponse(userId) {
-    const conversationPath = `version1/conversations/${userId}.json`;
+    const conversationPath = `conversations/${userId}.json`;
     // Usamos la API de raw content con un timestamp para evitar caché agresivo
     const url = `https://raw.githubusercontent.com/${GH_CONFIG.owner}/${GH_CONFIG.repo}/${GH_CONFIG.branch}/${conversationPath}?t=${Date.now()}`;
     
@@ -687,9 +687,14 @@ async function handleSendMessage() {
     appendMessageToUI('user', userText);
     chatInput.value = '';
 
-    // Identificador de usuario (simple para demo, idealmente persistente)
-    const userId = "demo_user"; 
-    const requestPath = `version1/requests/${userId}.json`;
+    // Identificador único por usuario (guardado en el navegador)
+    let userId = sessionStorage.getItem('chatUserId');
+    if (!userId) {
+        // Generar ID aleatorio: user_abc123
+        userId = 'user_' + Math.random().toString(36).substr(2, 9);
+        sessionStorage.setItem('chatUserId', userId);
+    }
+    const requestPath = `requests/${userId}.json`;
 
     appendMessageToUI('assistant', '... (Enviando a GitHub Actions) ...');
 
@@ -698,8 +703,9 @@ async function handleSendMessage() {
         const sha = await getFileSHA(requestPath);
 
         // 2. Crear/Actualizar archivo de request en GitHub
-        // El contenido debe estar en Base64
-        const content = btoa(JSON.stringify({ message: userText }));
+        // El contenido debe estar en Base64 (Fix para tildes y emojis)
+        const jsonContent = JSON.stringify({ message: userText });
+        const content = btoa(unescape(encodeURIComponent(jsonContent)));
         
         const body = {
             message: `Request from ${userId}`,

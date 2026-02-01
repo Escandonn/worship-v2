@@ -1,0 +1,94 @@
+name: Groq Chat Processor
+
+on:
+  push:
+    paths:
+      - 'requests/*.json' # Escucha cambios en la carpeta requests de la raíz
+  workflow_dispatch: # Permite activar el flujo manualmente desde la pestaña Actions
+
+permissions:
+  contents: write
+
+jobs:
+  process-chat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Process requests
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Iterar sobre archivos modificados en requests/
+          for file in requests/*.json; do
+            if [ ! -f "$file" ]; then continue; fi
+            
+            user=$(basename "$file" .json)
+            echo "Procesando mensaje de: $user"
+
+            # Leer el mensaje del usuario
+            user_msg=$(jq -r '.message' "$file")
+            
+            if [ "$user_msg" == "null" ] || [ -z "$user_msg" ]; then
+              echo "Solicitud vacía o ya procesada."
+              continue
+            fi
+
+            # Definir archivo de conversación
+            conv_file="conversations/$user.json"
+            mkdir -p conversations
+
+            # Cargar historial previo
+            if [ -f "$conv_file" ]; then
+              history=$(cat "$conv_file")
+            else
+              history='[]'
+            fi
+
+            # Construir payload para Groq
+            api_payload=$(jq -n \
+              --arg msg "$user_msg" \
+              --arg system "Eres un asistente experto en diseño web llamado Risp. Responde de forma breve y profesional." \
+              '{
+                model: "llama-3.1-8b-instant",
+                messages: [
+                  {role: "system", content: $system},
+                  {role: "user", content: $msg}
+                ]
+              }')
+
+            # Llamada a la API de Groq
+            response=$(curl -s https://api.groq.com/openai/v1/chat/completions \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $GROQ_API_KEY" \
+              -d "$api_payload")
+
+            # Extraer respuesta
+            reply=$(echo "$response" | jq -r '.choices[0].message.content')
+
+            if [ "$reply" == "null" ]; then
+              reply="Lo siento, hubo un error procesando tu solicitud."
+            fi
+
+            # Actualizar historial (JSON)
+            new_history=$(echo "$history" | jq \
+              --arg u_msg "$user_msg" \
+              --arg a_msg "$reply" \
+              '. + [{"role":"user", "content": $u_msg}, {"role":"assistant", "content": $a_msg}]')
+
+            echo "$new_history" > "$conv_file"
+            echo '{}' > "$file" # Limpiar request
+            
+            git add "$conv_file" "$file"
+          done
+
+          if git diff --staged --quiet; then
+            echo "No hay cambios para guardar."
+          else
+            git commit -m "🤖 Risp respondió a los usuarios"
+            git push
+          fi
