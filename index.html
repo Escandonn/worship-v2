@@ -44,6 +44,20 @@
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.15); /* Iluminación blanca elegante */
             text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
         }
+
+        /* Ajuste Móvil: Navbar lineal y compacto */
+        @media (max-width: 600px) {
+            .nav-container {
+                flex-wrap: nowrap; /* Evita que se apilen en dos filas */
+                gap: 5px; /* Reduce espacio entre botones */
+                padding-top: 15px; /* Reduce altura superior */
+            }
+            .nav-item {
+                padding: 8px 10px; /* Botones más pequeños */
+                font-size: 0.7rem;
+                white-space: nowrap; /* Texto en una sola línea */
+            }
+        }
     </style>
 </head>
 <body>
