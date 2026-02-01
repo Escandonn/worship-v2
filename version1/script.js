@@ -28,7 +28,7 @@ const CONFIG = {
     duracionTriangulo: 5000,   // Transición más lenta (5 segundos)
     
     tamanoEspacio: 1000, 
-    divisiones: 16, 
+    divisiones: 12, 
     velocidadRotacionX: 0.001,
     velocidadRotacionY: 0.0015,
     campoDeVision: 75
@@ -607,7 +607,7 @@ const chatSendBtn = document.getElementById('chat-send-btn');
 
 // Configuración del Chatbot (API Key hardcoded para prototipo frontend)
 const CHAT_CONFIG = {
-    apiKey: import.meta.env.VITE_GROQ_API_KEY, 
+    apiKey: (import.meta.env && import.meta.env.VITE_GROQ_API_KEY) || "", 
     model: "llama-3.1-8b-instant",
     systemPrompt: "Eres un asistente virtual que asesora sobre páginas web, tu función es atender dudas profesionalmente."
 };
