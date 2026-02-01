@@ -131,6 +131,7 @@ let lastShuffleTime = 0;
 // Variables Mobile
 let mobileStep = 0;
 let lastMobileChange = 0;
+let scrollUnlocked = false; // Bandera para optimizar el acceso al DOM
 
 // Materiales globales (Transparentes para permitir Fade Out)
 const mainMat = new THREE.MeshPhongMaterial({ 
@@ -506,8 +507,9 @@ function animate() {
         const isMobile = window.innerWidth < 800;
 
         // Habilitar scroll después de 1 segundo (tiempo de transición de las cards)
-        if (document.body.style.overflow !== 'auto' && (now - stateStartTime > 1000)) {
+        if (!scrollUnlocked && (now - stateStartTime > 1000)) {
             document.body.style.overflow = 'auto';
+            scrollUnlocked = true;
         }
 
         if (!isMobile) {

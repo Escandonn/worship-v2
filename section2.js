@@ -18,6 +18,7 @@ const contents = [
 
 let currentIndex = 0;
 let arrowLeft, arrowRight;
+let isSectionVisible = false; // Bandera para controlar el renderizado
 
 // Objetivos de posición/rotación para animación suave
 const targets = {
@@ -34,12 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Observer para detectar cuando la sección entra en pantalla
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
+            isSectionVisible = entry.isIntersecting; // Actualizar estado de visibilidad
             if (entry.isIntersecting) {
                 content.classList.add('active');
             }
         });
     }, {
-        threshold: 0.3 // Se activa cuando el 30% de la sección es visible
+        threshold: 0 // Detectar apenas entre/salga de la pantalla
     });
 
     if (section2) {
@@ -143,7 +145,7 @@ function initArrows(container) {
         const group = new THREE.Group();
         
         // Cuerpo (Cilindro)
-        const shaftGeo = new THREE.CylinderGeometry(0.1, 0.1, 2.5, 32);
+        const shaftGeo = new THREE.CylinderGeometry(0.1, 0.1, 2.5, 8); // Bajamos segmentos de 32 a 8
         const mat = new THREE.MeshStandardMaterial({ 
             color: 0xcccccc, // Gris metálico claro
             roughness: 0.3, 
@@ -154,7 +156,7 @@ function initArrows(container) {
         group.add(shaft);
 
         // Punta (Cono)
-        const headGeo = new THREE.ConeGeometry(0.35, 0.8, 32);
+        const headGeo = new THREE.ConeGeometry(0.35, 0.8, 16); // Bajamos segmentos de 32 a 16
         const head = new THREE.Mesh(headGeo, mat);
         head.rotation.z = -Math.PI / 2;
         head.position.x = 1.6; // En la punta del cilindro
@@ -181,6 +183,8 @@ function initArrows(container) {
     // 4. Animación
     const animate = () => {
         requestAnimationFrame(animate);
+
+        if (!isSectionVisible) return; // PAUSAR si no está en pantalla (Ahorra GPU)
         
         const time = Date.now() * 0.002;
         const isMobile = window.innerWidth < 768;
