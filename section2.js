@@ -1,0 +1,231 @@
+import * as THREE from 'three';
+
+// Contenido dinámico (3 frases)
+const contents = [
+    {
+        title: "Nuestra Filosofía",
+        text: "Creamos experiencias digitales que trascienden lo visual. <br>Fusionamos arte, código y estrategia para definir el futuro de la web."
+    },
+    {
+        title: "Innovación Radical",
+        text: "Rompemos los límites de lo posible. <br>Implementamos tecnologías inmersivas y 3D para que tu marca destaque en un océano digital."
+    },
+    {
+        title: "Impacto Global",
+        text: "Diseñamos pensando en la escalabilidad. <br>Soluciones robustas que crecen contigo y conectan con audiencias en cualquier parte del mundo."
+    }
+];
+
+let currentIndex = 0;
+let arrowLeft, arrowRight;
+
+// Objetivos de posición/rotación para animación suave
+const targets = {
+    left: { pos: new THREE.Vector3(-6, 1.5, 0), rot: new THREE.Euler(0, 0, 0) },
+    right: { pos: new THREE.Vector3(6, -1, 0), rot: new THREE.Euler(0, 0, Math.PI) }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const section2 = document.getElementById('section2');
+    const content = document.querySelector('.sec2-content');
+    const titleEl = document.querySelector('.sec2-title');
+    const textEl = document.querySelector('.sec2-text');
+
+    // Observer para detectar cuando la sección entra en pantalla
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                content.classList.add('active');
+            }
+        });
+    }, {
+        threshold: 0.3 // Se activa cuando el 30% de la sección es visible
+    });
+
+    if (section2) {
+        observer.observe(section2);
+        initArrows(section2); // Iniciar escena 3D
+        
+        // Iniciar ciclo de contenido (7 segundos)
+        setInterval(() => {
+            // 1. Ocultar texto (Fade Out)
+            content.classList.remove('active');
+            content.style.opacity = '0';
+            content.style.transform = 'translateY(20px)';
+
+            setTimeout(() => {
+                // 2. Cambiar datos
+                currentIndex = (currentIndex + 1) % contents.length;
+                
+                if (titleEl) titleEl.textContent = contents[currentIndex].title;
+                if (textEl) textEl.innerHTML = contents[currentIndex].text;
+
+                // 3. Actualizar flechas
+                updateArrowTargets();
+
+                // 4. Mostrar texto (Fade In)
+                content.classList.add('active');
+                content.style.opacity = '1';
+                content.style.transform = 'translateY(0)';
+            }, 1000); // Espera a que termine la transición CSS
+
+        }, 7000);
+    }
+});
+
+function updateArrowTargets() {
+    const isMobile = window.innerWidth < 768;
+
+    if (isMobile) {
+        // MÓVIL: Flechas Arriba/Abajo. Cambio Horizontal.
+        const yBase = 4.5;
+        
+        // Rotación: Apuntando hacia el centro (Verticalmente)
+        targets.left.rot.z = -Math.PI / 2; // Arriba apunta abajo
+        targets.right.rot.z = Math.PI / 2; // Abajo apunta arriba
+
+        // Cambio Horizontal según frase
+        let xOffset = 0;
+        if (currentIndex === 1) xOffset = -2;
+        if (currentIndex === 2) xOffset = 2;
+
+        targets.left.pos.set(xOffset, yBase, 0);
+        targets.right.pos.set(-xOffset, -yBase, 0); // Espejo inferior
+
+    } else {
+        // PC: Flechas Izq/Der. Cambio Vertical.
+        const xBase = 6;
+        
+        // Rotación: Apuntando hacia el centro (Horizontalmente)
+        targets.left.rot.z = 0;
+        targets.right.rot.z = Math.PI;
+
+        // Cambio Vertical según frase
+        let yLeft = 1.5, yRight = -1;
+        if (currentIndex === 1) { yLeft = 0; yRight = 0; }
+        if (currentIndex === 2) { yLeft = -1.5; yRight = 1; }
+
+        targets.left.pos.set(-xBase, yLeft, 0);
+        targets.right.pos.set(xBase, yRight, 0);
+    }
+}
+
+function initArrows(container) {
+    // 1. Configuración de Escena
+    const scene = new THREE.Scene();
+    // No establecemos background para que sea transparente
+    
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 10;
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    
+    // Estilos del canvas para que quede de fondo
+    renderer.domElement.style.position = 'absolute';
+    renderer.domElement.style.top = '0';
+    renderer.domElement.style.left = '0';
+    renderer.domElement.style.pointerEvents = 'none'; // Permitir clicks a través
+    renderer.domElement.style.zIndex = '0';
+    container.appendChild(renderer.domElement);
+
+    // 2. Iluminación
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambientLight);
+    
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+    dirLight.position.set(5, 5, 10);
+    scene.add(dirLight);
+
+    // 3. Crear Flecha (Función Reutilizable)
+    const createArrow = () => {
+        const group = new THREE.Group();
+        
+        // Cuerpo (Cilindro)
+        const shaftGeo = new THREE.CylinderGeometry(0.1, 0.1, 2.5, 32);
+        const mat = new THREE.MeshStandardMaterial({ 
+            color: 0xcccccc, // Gris metálico claro
+            roughness: 0.3, 
+            metalness: 0.8 
+        });
+        const shaft = new THREE.Mesh(shaftGeo, mat);
+        shaft.rotation.z = -Math.PI / 2; // Acostada horizontalmente
+        group.add(shaft);
+
+        // Punta (Cono)
+        const headGeo = new THREE.ConeGeometry(0.35, 0.8, 32);
+        const head = new THREE.Mesh(headGeo, mat);
+        head.rotation.z = -Math.PI / 2;
+        head.position.x = 1.6; // En la punta del cilindro
+        group.add(head);
+
+        return group;
+    };
+
+    arrowLeft = createArrow();
+    arrowRight = createArrow();
+    
+    // Configuración inicial
+    updateArrowTargets();
+    
+    // Posicionar inmediatamente para evitar saltos
+    arrowLeft.position.copy(targets.left.pos);
+    arrowLeft.rotation.z = targets.left.rot.z;
+    arrowRight.position.copy(targets.right.pos);
+    arrowRight.rotation.z = targets.right.rot.z;
+
+    scene.add(arrowLeft);
+    scene.add(arrowRight);
+
+    // 4. Animación
+    const animate = () => {
+        requestAnimationFrame(animate);
+        
+        const time = Date.now() * 0.002;
+        const isMobile = window.innerWidth < 768;
+        const lerpSpeed = 0.05;
+
+        // Calcular posición deseada con flotación
+        const floatOffset = Math.sin(time) * 0.5;
+        
+        // Clonar targets para no modificarlos
+        const desiredLeft = targets.left.pos.clone();
+        const desiredRight = targets.right.pos.clone();
+
+        if (isMobile) {
+            // Flotación Vertical en móvil (Señalando arriba/abajo)
+            desiredLeft.y += floatOffset * 0.2;
+            desiredRight.y -= floatOffset * 0.2;
+        } else {
+            // Flotación Horizontal en PC (Señalando izq/der)
+            desiredLeft.x += floatOffset;
+            desiredRight.x -= floatOffset;
+        }
+
+        // Lerp Posición
+        arrowLeft.position.lerp(desiredLeft, lerpSpeed);
+        arrowRight.position.lerp(desiredRight, lerpSpeed);
+
+        // Lerp Rotación (Simple en Z)
+        arrowLeft.rotation.z += (targets.left.rot.z - arrowLeft.rotation.z) * lerpSpeed;
+        arrowRight.rotation.z += (targets.right.rot.z - arrowRight.rotation.z) * lerpSpeed;
+        
+        // Cabeceo suave
+        arrowLeft.rotation.x = Math.sin(time * 2) * 0.1;
+        arrowRight.rotation.x = Math.cos(time * 2) * 0.1;
+
+        renderer.render(scene, camera);
+    };
+    animate();
+
+    // 5. Responsive
+    window.addEventListener('resize', () => {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        updateArrowTargets();
+    });
+}

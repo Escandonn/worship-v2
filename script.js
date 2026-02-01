@@ -1,10 +1,6 @@
 import * as THREE from 'three';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 // ==========================================
 // CONFIGURACIÓN (Variables optimizadas)
@@ -15,8 +11,8 @@ const CONFIG = {
     
     // Configuración del Texto
     frases: ["Bienvenido a worship", "EL SIGUIENTE NIVEL EN PAGINAS WEB"],
-    colorMain: 0xf8fbff,
-
+    colorMain: 0xffffff,       // Blanco
+    colorBorder: 0xffffff,     // Blanco
     typingSpeed: 100,
     
     // Escala para adaptar la lógica de app.js (Radio 40) al mundo de version1 (Z 800)
@@ -45,6 +41,9 @@ const CONFIG = {
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(CONFIG.colorFondo);
 
+// Escena para el texto (Renderizado superior)
+const sceneText = new THREE.Scene();
+
 const camera = new THREE.PerspectiveCamera(
     CONFIG.campoDeVision, 
     window.innerWidth / window.innerHeight, 
@@ -54,36 +53,29 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.z = 800;
 
 // Iluminación para resaltar el volumen del texto
-const ambientLight = new THREE.AmbientLight(0x444444, 0.5);
-scene.add(ambientLight);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+sceneText.add(ambientLight);
 
-const pointLight = new THREE.PointLight(0x666666, 10, 2000);
+const pointLight = new THREE.PointLight(0xffffff, 10, 2000);
 pointLight.position.set(0, 100, 500);
-scene.add(pointLight);
+sceneText.add(pointLight);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.autoClear = false; 
 
-document.body.appendChild(renderer.domElement);
+// Bloquear scroll al inicio para forzar la intro
+document.body.style.overflow = 'hidden';
+window.scrollTo(0, 0);
 
-// ==========================================
-// POST-PROCESSING (BLOOM)
-// ==========================================
-const renderScene = new RenderPass(scene, camera);
-
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-bloomPass.threshold = 0.1;
-bloomPass.strength = 0.3; // Intensidad del resplandor
-bloomPass.radius = 0.5;
-
-const outputPass = new OutputPass();
-
-const composer = new EffectComposer(renderer);
-composer.addPass(renderScene);
-composer.addPass(bloomPass);
-composer.addPass(outputPass);
+// Inyectar el canvas en el contenedor específico del Hero
+const heroContainer = document.getElementById('hero-container');
+if (heroContainer) {
+    heroContainer.appendChild(renderer.domElement);
+} else {
+    document.body.appendChild(renderer.domElement);
+}
 
 // ==========================================
 // MATRIZ DE LÍNEAS
@@ -108,11 +100,9 @@ geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)
 const materialLines = new THREE.LineBasicMaterial({ 
     color: CONFIG.colorLineas,
     transparent: true,
-    opacity: 0.4,
-    depthWrite: false // Permite que el texto se dibuje encima sin borrar depth
+    opacity: 0.4 // Líneas un poco más tenues para resaltar el texto
 });
 const linesMesh = new THREE.LineSegments(geometry, materialLines);
-linesMesh.renderOrder = -1; // Asegurar que se renderice al fondo
 scene.add(linesMesh);
 
 // ==========================================
@@ -158,12 +148,12 @@ const borderMat = new THREE.MeshBasicMaterial({
 // Función para crear el texto dinámicamente
 function createTextPhrase(textString) {
     if (activeTextGroup) {
-        scene.remove(activeTextGroup);
+        sceneText.remove(activeTextGroup);
     }
 
     activeTextGroup = new THREE.Group();
     activeCharGroups = [];
-    scene.add(activeTextGroup);
+    sceneText.add(activeTextGroup);
 
     // 1. Lógica de división de líneas para textos largos
     let lines = [];
@@ -263,7 +253,7 @@ loader.load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_bold.type
 
 // Función para crear el Triángulo y Círculo
 function createTriangle() {
-    if (triangleGroup) scene.remove(triangleGroup);
+    if (triangleGroup) sceneText.remove(triangleGroup);
     
     triangleGroup = new THREE.Group();
     const s = CONFIG.triangleScale;
@@ -297,7 +287,7 @@ function createTriangle() {
     circleMesh = new THREE.Mesh(torusGeo, torusMat);
     triangleGroup.add(circleMesh);
 
-    scene.add(triangleGroup);
+    sceneText.add(triangleGroup);
 }
 
 // Función para crear conectores (Líneas)
@@ -307,12 +297,12 @@ function createConnectors() {
     // Definición de las 6 Cards con sus colores únicos
     // El orden coincide con el DOM: 4, 5, 6, 1, 2, 3
     const cardConfigs = [
-        { id: 'card-4', color: 0xffffff }, // Desarrollo (Blanco)
-        { id: 'card-5', color: 0xe0e0e0 }, // Marketing (Gris Claro)
-        { id: 'card-6', color: 0xcccccc }, // Soporte (Gris)
-        { id: 'card-1', color: 0xffffff }, // Innovación (Blanco)
-        { id: 'card-2', color: 0xe0e0e0 }, // Diseño (Gris Claro)
-        { id: 'card-3', color: 0xcccccc }  // Estrategia (Gris)
+        { id: 'card-4', color: 0x666666 }, // Desarrollo (Gris Medio)
+        { id: 'card-5', color: 0x888888 }, // Marketing (Gris Claro)
+        { id: 'card-6', color: 0xaaaaaa }, // Soporte (Gris Más Claro)
+        { id: 'card-1', color: 0xcccccc }, // Innovación (Plata)
+        { id: 'card-2', color: 0xeeeeee }, // Diseño (Casi Blanco)
+        { id: 'card-3', color: 0xffffff }  // Estrategia (Blanco)
     ];
 
     const domCards = document.querySelectorAll('.info-card');
@@ -423,7 +413,7 @@ function animate() {
             
             // Si ya bajó lo suficiente (desapareció de pantalla)
             if (activeTextGroup.position.y < -1000) {
-                scene.remove(activeTextGroup);
+                sceneText.remove(activeTextGroup);
                 currentState = 'SHOW_NAV';
                 
                 // Mostrar Navbar
@@ -485,6 +475,11 @@ function animate() {
     }
     else if (currentState === 'SHOW_CARDS') {
         const isMobile = window.innerWidth < 800;
+
+        // Habilitar scroll después de 1 segundo (tiempo de transición de las cards)
+        if (document.body.style.overflow !== 'auto' && (now - stateStartTime > 1000)) {
+            document.body.style.overflow = 'auto';
+        }
 
         if (!isMobile) {
             // --- LÓGICA DESKTOP ---
@@ -584,7 +579,10 @@ function animate() {
         }
     }
 
-    composer.render();
+    renderer.clear();
+    renderer.render(scene, camera);     // Renderiza primero el fondo/líneas
+    renderer.clearDepth();              // Limpia la profundidad para que el texto no se oculte
+    renderer.render(sceneText, camera); // Renderiza el texto encima
 }
 
 function handleResize() {
@@ -594,7 +592,6 @@ function handleResize() {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
-    composer.setSize(width, height);
     
     // Lógica responsive mejorada para evitar que el texto se salga
     if (width < 600) {

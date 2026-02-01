@@ -159,7 +159,7 @@ nav {
 
 /* --- INFO CARDS --- */
 #cards-container {
-    position: fixed;
+    position: absolute; /* Se mueve con el Hero, no persigue al scroll */
     inset: 0;
     z-index: 900;
     pointer-events: none; /* Click through */

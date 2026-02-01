@@ -1,0 +1,47 @@
+#section2 {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    background-color: #050505; /* Un negro ligeramente más claro que el hero */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10; /* Asegura que el contenido sea clickeable */
+    border-top: 1px solid #222;
+    overflow: hidden;
+}
+
+.sec2-content {
+    text-align: center;
+    max-width: 800px;
+    padding: 20px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 1s ease-out;
+    position: relative; /* Necesario para el z-index */
+    z-index: 2; /* Por encima de las flechas 3D */
+}
+
+.sec2-content.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.sec2-title {
+    font-family: 'Arial', sans-serif;
+    font-size: 3rem;
+    color: #ffffff;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    background: linear-gradient(90deg, #fff, #666);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sec2-text {
+    font-size: 1.2rem;
+    color: #888;
+    line-height: 1.6;
+}

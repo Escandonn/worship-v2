@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matriz 3D Three.js</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="section2.css"> <!-- CSS Sección 2 -->
     <script type="importmap">
         {
             "imports": {
@@ -61,6 +62,9 @@
     </style>
 </head>
 <body>
+    <!-- SECCIÓN 1: HERO 3D (100vh) -->
+    <div id="hero-container" style="width: 100%; height: 100vh; position: relative; overflow: hidden;">
+
     <!-- Navbar importado (Oculto inicialmente) -->
     <nav style="opacity: 0; pointer-events: none; transition: opacity 1.5s ease;">
         <div class="nav-container">
@@ -99,8 +103,19 @@
         </div>
     </div>
 
+    </div> <!-- Fin hero-container -->
+
+    <!-- SECCIÓN 2: NUEVO CONTENIDO (100vh) -->
+    <section id="section2">
+        <div class="sec2-content">
+            <h2 class="sec2-title">Nuestra Filosofía</h2>
+            <p class="sec2-text">Creamos experiencias digitales que trascienden lo visual. <br>Fusionamos arte, código y estrategia para definir el futuro de la web.</p>
+        </div>
+    </section>
+
     <!-- El canvas será generado automáticamente por Three.js -->
     <script type="module" src="script.js"></script>
+    <script type="module" src="section2.js"></script> <!-- JS Sección 2 -->
 
     <!-- CHATBOT ASESOR VIRTUAL RISP -->
     <div id="chatbot-container">
