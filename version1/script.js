@@ -607,7 +607,13 @@ const chatSendBtn = document.getElementById('chat-send-btn');
 
 // Configuración del Chatbot (API Key hardcoded para prototipo frontend)
 const CHAT_CONFIG = {
-    apiKey: (import.meta.env && import.meta.env.VITE_GROQ_API_KEY) || "", 
+    apiKey: (() => {
+        try {
+            return import.meta.env.VITE_GROQ_API_KEY;
+        } catch (e) {
+            return "";
+        }
+    })(),
     model: "llama-3.1-8b-instant",
     systemPrompt: "Eres un asistente virtual que asesora sobre páginas web, tu función es atender dudas profesionalmente."
 };
