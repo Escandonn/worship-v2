@@ -1,0 +1,45 @@
+#section3 {
+    position: relative;
+    width: 100%;
+    height: 120vh; /* Altura solicitada */
+    background-color: #080808; /* Fondo muy oscuro */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Separa las franjas al tope y fondo */
+    overflow: hidden;
+    border-top: 1px solid #333;
+}
+
+/* Franjas Matrix (Arriba y Abajo) */
+.matrix-strip {
+    position: relative;
+    width: 100%;
+    height: 10vh; /* 10% de altura de viewport (aprox, ajustado a vh global) */
+    background: #000;
+    overflow: hidden;
+    z-index: 1;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+    border-bottom: 1px solid #003300;
+}
+
+.matrix-strip.bottom {
+    border-bottom: none;
+    border-top: 1px solid #003300;
+}
+
+/* Contenido Central */
+.sec3-middle {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    background: radial-gradient(circle at center, #111 0%, #080808 100%);
+}
+
+.sec3-title {
+    font-size: 4rem;
+    color: #fff;
+    text-transform: uppercase;
