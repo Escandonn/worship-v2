@@ -20,7 +20,7 @@ const CONFIG = {
 
     // Tiempos y Distancias
     duracionZoom: 2000,        // 2 segundos exactos de zoom
-    distanciaZoom: 400,       // Distancia a recorrer (sincronizada con el espacio)
+    distanciaZoom: 300,       // Distancia a recorrer (sincronizada con el espacio)
     
     // Configuración Triángulo
     triangleScale: 90,         // Más grande en PC (antes 50)
