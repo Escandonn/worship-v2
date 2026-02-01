@@ -157,7 +157,7 @@ function createTextPhrase(textString) {
 
     // 1. Lógica de división de líneas para textos largos
     let lines = [];
-    const isMobile = window.innerWidth < 600;
+    const isMobile = window.innerWidth < 800;
 
     if (isMobile) {
         const words = textString.split(' ');
@@ -335,7 +335,9 @@ function animate() {
         
         // FIX: Anclar el texto a la cámara para mantener el tamaño constante
         if (activeTextGroup) {
-            activeTextGroup.position.z = camera.position.z - 800;
+            // En móviles lo mandamos más al fondo (1600) para que quepa mejor en el campo de visión
+            const isMobile = window.innerWidth < 800;
+            activeTextGroup.position.z = camera.position.z - (isMobile ? 1600 : 800);
         }
 
         handleResize(); // Ajustar tamaño/posición
@@ -600,8 +602,8 @@ function handleResize() {
     renderer.setSize(width, height);
     
     // Lógica responsive mejorada para evitar que el texto se salga
-    if (width < 600) {
-        if(activeTextGroup) activeTextGroup.scale.set(0.22, 0.22, 0.22); // Reducido drásticamente para evitar desbordamiento
+    if (width < 800) {
+        if(activeTextGroup) activeTextGroup.scale.set(0.35, 0.35, 0.35); // Escala ajustada para la nueva profundidad
         if(activeTextGroup) activeTextGroup.position.y = 50;             // Ajuste vertical
         CONFIG.triangleOffsetX = 0; // Centrado en móvil
         if(triangleGroup) triangleGroup.scale.set(0.4, 0.4, 0.4); // Reducir triángulo en móvil
