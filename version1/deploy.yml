@@ -33,7 +33,9 @@ jobs:
         run: npm install
 
       - name: Build
-        run: npm run build
+        run: |
+          npm run build
+          touch dist/.nojekyll
         env:
           VITE_GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 

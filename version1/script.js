@@ -650,6 +650,12 @@ async function handleSendMessage() {
     // 2. Actualizar historial
     conversationHistory.push({ role: "user", content: userText });
 
+    // Validación de API Key antes de llamar
+    if (!CHAT_CONFIG.apiKey) {
+        appendMessageToUI('assistant', '⚠️ Error: API Key no detectada. Asegúrate de tener el archivo .env y reinicia el servidor (npm run dev).');
+        return;
+    }
+
     // 3. Limitar ventana de contexto (Regla de Oro: últimos 10 mensajes + system)
     if (conversationHistory.length > 11) {
         // Mantenemos el system prompt (índice 0) y los últimos 10
@@ -673,6 +679,10 @@ async function handleSendMessage() {
 
         const data = await response.json();
         
+        if (!response.ok) {
+            throw new Error(data.error?.message || `Error ${response.status}: ${data.error?.code || 'Desconocido'}`);
+        }
+
         if (data.choices && data.choices.length > 0) {
             const botReply = data.choices[0].message.content;
             
@@ -685,7 +695,7 @@ async function handleSendMessage() {
         }
     } catch (error) {
         console.error('Error API:', error);
-        appendMessageToUI('assistant', 'Lo siento, tuve un problema de conexión. Intenta de nuevo.');
+        appendMessageToUI('assistant', `Error del sistema: ${error.message}`);
     }
 }
 
