@@ -588,11 +588,102 @@ animate();
 // ==========================================
 const chatbotContainer = document.getElementById('chatbot-container');
 const chatbotHeader = document.getElementById('chatbot-header');
+const chatHistoryEl = document.getElementById('chat-history');
+const chatInput = document.getElementById('chat-input');
+const chatSendBtn = document.getElementById('chat-send-btn');
+
+// Configuración del Chatbot (API Key hardcoded para prototipo frontend)
+const CHAT_CONFIG = {
+    apiKey: import.meta.env.VITE_GROQ_API_KEY, 
+    model: "llama-3.1-8b-instant",
+    systemPrompt: "Eres un asistente virtual que asesora sobre páginas web, tu función es atender dudas profesionalmente."
+};
+
+// Estado del historial (Cargar de sessionStorage o iniciar)
+let conversationHistory = JSON.parse(sessionStorage.getItem('chatHistory')) || [
+    { role: "system", content: CHAT_CONFIG.systemPrompt }
+];
+
+// Función para renderizar mensaje en UI
+function appendMessageToUI(role, text) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-message ${role}`;
+    msgDiv.textContent = text;
+    chatHistoryEl.appendChild(msgDiv);
+    chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight; // Auto-scroll
+}
+
+// Cargar mensajes previos al iniciar (si existen)
+if (conversationHistory.length > 1) {
+    conversationHistory.forEach(msg => {
+        if (msg.role !== 'system') {
+            appendMessageToUI(msg.role, msg.content);
+        }
+    });
+} else {
+    // Mensaje de bienvenida por defecto
+    appendMessageToUI('assistant', '¡Hola! Soy Risp. ¿En qué puedo ayudarte con tu proyecto web hoy?');
+}
+
+// Función principal para enviar mensaje
+async function handleSendMessage() {
+    const userText = chatInput.value.trim();
+    if (!userText) return;
+
+    // 1. Mostrar mensaje usuario
+    appendMessageToUI('user', userText);
+    chatInput.value = '';
+
+    // 2. Actualizar historial
+    conversationHistory.push({ role: "user", content: userText });
+
+    // 3. Limitar ventana de contexto (Regla de Oro: últimos 10 mensajes + system)
+    if (conversationHistory.length > 11) {
+        // Mantenemos el system prompt (índice 0) y los últimos 10
+        const lastMessages = conversationHistory.slice(-10);
+        conversationHistory = [conversationHistory[0], ...lastMessages];
+    }
+
+    // 4. Llamada a la API
+    try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${CHAT_CONFIG.apiKey}`
+            },
+            body: JSON.stringify({
+                model: CHAT_CONFIG.model,
+                messages: conversationHistory
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.choices && data.choices.length > 0) {
+            const botReply = data.choices[0].message.content;
+            
+            // 5. Mostrar respuesta y guardar
+            appendMessageToUI('assistant', botReply);
+            conversationHistory.push({ role: "assistant", content: botReply });
+            
+            // Persistencia
+            sessionStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+        }
+    } catch (error) {
+        console.error('Error API:', error);
+        appendMessageToUI('assistant', 'Lo siento, tuve un problema de conexión. Intenta de nuevo.');
+    }
+}
 
 if (chatbotHeader && chatbotContainer) {
     chatbotHeader.addEventListener('click', () => {
         chatbotContainer.classList.toggle('expanded');
-        // Aquí podrías cargar la URL real del iframe si no quieres cargarla al inicio
-        // document.getElementById('chatbot-frame').src = "URL_DEL_BOT";
+    });
+
+    // Event Listeners para el chat
+    chatSendBtn.addEventListener('click', handleSendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSendMessage();
     });
 }

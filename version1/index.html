@@ -5,14 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matriz 3D Three.js</title>
     <link rel="stylesheet" href="style.css">
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
 </head>
 <body>
     <!-- Navbar importado (Oculto inicialmente) -->
@@ -64,7 +56,15 @@
             <span class="chatbot-title">Habla con nuestro asesor virtual Risp</span>
             <button id="chatbot-toggle">▲</button>
         </div>
-        <iframe id="chatbot-frame" src="about:blank" title="Asesor Virtual"></iframe>
+        
+        <!-- Interfaz de Chat Real -->
+        <div id="chat-interface">
+            <div id="chat-history"></div>
+            <div id="chat-input-wrapper">
+                <input type="text" id="chat-input" placeholder="Escribe tu duda aquí..." autocomplete="off">
+                <button id="chat-send-btn">➤</button>
+            </div>
+        </div>
     </div>
 </body>
 </html>
