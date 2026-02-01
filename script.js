@@ -605,11 +605,14 @@ const chatHistoryEl = document.getElementById('chat-history');
 const chatInput = document.getElementById('chat-input');
 const chatSendBtn = document.getElementById('chat-send-btn');
 
-// Configuración del Chatbot
-const CHAT_CONFIG = {
-    apiKey: "",
-    model: "llama-3.1-8b-instant",
-    systemPrompt: "Eres un asistente virtual que asesora sobre páginas web, tu función es atender dudas profesionalmente."
+// Configuración "Serverless" vía GitHub
+const GH_CONFIG = {
+    owner: "TU_USUARIO_GITHUB", // CAMBIAR ESTO
+    repo: "worship-v2",          // CAMBIAR ESTO
+    branch: "main",              // O 'master'
+    // ⚠️ ADVERTENCIA: Exponer un token con permisos de escritura en el cliente es inseguro.
+    // Úsalo solo para demos/portfolio personal.
+    token: "TU_GITHUB_PAT_TOKEN" // CAMBIAR ESTO (Token clásico con scope 'repo')
 };
 
 // Estado del historial (Cargar de sessionStorage o iniciar)
@@ -638,6 +641,43 @@ if (conversationHistory.length > 1) {
     appendMessageToUI('assistant', '¡Hola! Soy Risp. ¿En qué puedo ayudarte con tu proyecto web hoy?');
 }
 
+// Función auxiliar para obtener el SHA de un archivo (necesario para actualizar en GitHub)
+async function getFileSHA(path) {
+    try {
+        const url = `https://api.github.com/repos/${GH_CONFIG.owner}/${GH_CONFIG.repo}/contents/${path}`;
+        const res = await fetch(url, {
+            headers: { 
+                'Authorization': `token ${GH_CONFIG.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.sha;
+    } catch (e) {
+        return null;
+    }
+}
+
+// Función para leer la respuesta (Polling)
+async function pollForResponse(userId) {
+    const conversationPath = `version1/conversations/${userId}.json`;
+    // Usamos la API de raw content con un timestamp para evitar caché agresivo
+    const url = `https://raw.githubusercontent.com/${GH_CONFIG.owner}/${GH_CONFIG.repo}/${GH_CONFIG.branch}/${conversationPath}?t=${Date.now()}`;
+    
+    try {
+        const res = await fetch(url);
+        if (res.ok) {
+            const history = await res.json();
+            const lastMsg = history[history.length - 1];
+            if (lastMsg && lastMsg.role === 'assistant') {
+                return lastMsg.content;
+            }
+        }
+    } catch (e) { console.error("Polling error", e); }
+    return null;
+}
+
 // Función principal para enviar mensaje
 async function handleSendMessage() {
     const userText = chatInput.value.trim();
@@ -647,55 +687,59 @@ async function handleSendMessage() {
     appendMessageToUI('user', userText);
     chatInput.value = '';
 
-    // 2. Actualizar historial
-    conversationHistory.push({ role: "user", content: userText });
+    // Identificador de usuario (simple para demo, idealmente persistente)
+    const userId = "demo_user"; 
+    const requestPath = `version1/requests/${userId}.json`;
 
-    // Validación de API Key antes de llamar
-    if (!CHAT_CONFIG.apiKey) {
-        appendMessageToUI('assistant', '⚠️ Error: API Key no detectada.');
-        return;
-    }
+    appendMessageToUI('assistant', '... (Enviando a GitHub Actions) ...');
 
-    // 3. Limitar ventana de contexto (Regla de Oro: últimos 10 mensajes + system)
-    if (conversationHistory.length > 11) {
-        // Mantenemos el system prompt (índice 0) y los últimos 10
-        const lastMessages = conversationHistory.slice(-10);
-        conversationHistory = [conversationHistory[0], ...lastMessages];
-    }
-
-    // 4. Llamada a la API
     try {
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
+        // 1. Obtener SHA si el archivo ya existe
+        const sha = await getFileSHA(requestPath);
+
+        // 2. Crear/Actualizar archivo de request en GitHub
+        // El contenido debe estar en Base64
+        const content = btoa(JSON.stringify({ message: userText }));
+        
+        const body = {
+            message: `Request from ${userId}`,
+            content: content,
+            branch: GH_CONFIG.branch
+        };
+        if (sha) body.sha = sha;
+
+        await fetch(`https://api.github.com/repos/${GH_CONFIG.owner}/${GH_CONFIG.repo}/contents/${requestPath}`, {
+            method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${CHAT_CONFIG.apiKey}`
+                'Authorization': `token ${GH_CONFIG.token}`,
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                model: CHAT_CONFIG.model,
-                messages: conversationHistory
-            })
+            body: JSON.stringify(body)
         });
 
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error?.message || `Error ${response.status}: ${data.error?.code || 'Desconocido'}`);
-        }
+        // 3. Polling para esperar la respuesta (Simulando socket)
+        let attempts = 0;
+        const maxAttempts = 20; // 60 segundos aprox
+        const interval = setInterval(async () => {
+            attempts++;
+            const reply = await pollForResponse(userId);
+            
+            // Comprobamos si hay una respuesta nueva (esto es simplificado, 
+            // en prod compararíamos timestamps o IDs de mensaje)
+            if (reply) {
+                // Borrar el mensaje de "Enviando..." (el último hijo)
+                chatHistoryEl.lastChild.remove();
+                appendMessageToUI('assistant', reply);
+                clearInterval(interval);
+            } else if (attempts >= maxAttempts) {
+                clearInterval(interval);
+                appendMessageToUI('assistant', '⚠️ Tiempo de espera agotado. GitHub Actions está tardando mucho.');
+            }
+        }, 3000); // Consultar cada 3 segundos
 
-        if (data.choices && data.choices.length > 0) {
-            const botReply = data.choices[0].message.content;
-            
-            // 5. Mostrar respuesta y guardar
-            appendMessageToUI('assistant', botReply);
-            conversationHistory.push({ role: "assistant", content: botReply });
-            
-            // Persistencia
-            sessionStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
-        }
     } catch (error) {
-        console.error('Error API:', error);
-        appendMessageToUI('assistant', `Error del sistema: ${error.message}`);
+        console.error('Error GitHub API:', error);
+        appendMessageToUI('assistant', `Error de conexión con GitHub: ${error.message}`);
     }
 }
 
