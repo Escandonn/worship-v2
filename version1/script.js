@@ -605,15 +605,9 @@ const chatHistoryEl = document.getElementById('chat-history');
 const chatInput = document.getElementById('chat-input');
 const chatSendBtn = document.getElementById('chat-send-btn');
 
-// Configuración del Chatbot (API Key hardcoded para prototipo frontend)
+// Configuración del Chatbot
 const CHAT_CONFIG = {
-    apiKey: (() => {
-        try {
-            return import.meta.env.VITE_GROQ_API_KEY;
-        } catch (e) {
-            return "";
-        }
-    })(),
+    apiKey: "",
     model: "llama-3.1-8b-instant",
     systemPrompt: "Eres un asistente virtual que asesora sobre páginas web, tu función es atender dudas profesionalmente."
 };
@@ -658,7 +652,7 @@ async function handleSendMessage() {
 
     // Validación de API Key antes de llamar
     if (!CHAT_CONFIG.apiKey) {
-        appendMessageToUI('assistant', '⚠️ Error: API Key no detectada. Asegúrate de tener el archivo .env y reinicia el servidor (npm run dev).');
+        appendMessageToUI('assistant', '⚠️ Error: API Key no detectada.');
         return;
     }
 

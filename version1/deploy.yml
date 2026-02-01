@@ -34,6 +34,11 @@ jobs:
 
       - name: Build
         run: |
+          if [ -z "$VITE_GROQ_API_KEY" ]; then
+            echo "WARNING: VITE_GROQ_API_KEY is empty or not set!"
+          else
+            echo "SUCCESS: VITE_GROQ_API_KEY is set (masked)"
+          fi
           npm run build
           touch dist/.nojekyll
         env:
