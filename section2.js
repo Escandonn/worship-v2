@@ -119,7 +119,7 @@ function initArrows(container) {
     camera.position.z = 10;
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     
     // Estilos del canvas para que quede de fondo
@@ -220,12 +220,20 @@ function initArrows(container) {
     animate();
 
     // 5. Responsive
-    window.addEventListener('resize', () => {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+    let lastWidth = container.clientWidth;
+    
+    const resizeObserver = new ResizeObserver(() => {
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+
+        // Evitar saltos en móvil si solo cambia la altura (barra de dirección)
+        if (window.innerWidth < 768 && width === lastWidth) return;
+        lastWidth = width;
+
         renderer.setSize(width, height);
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
         updateArrowTargets();
     });
+    resizeObserver.observe(container);
 }

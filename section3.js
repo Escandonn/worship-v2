@@ -109,9 +109,16 @@ function initMatrixStrip(container, font, direction = 'down') {
     animate();
 
     // 7. Responsive
+    let lastWidth = container.clientWidth;
+
     const resizeObserver = new ResizeObserver(() => {
         const newW = container.clientWidth;
         const newH = container.clientHeight;
+
+        // Evitar saltos en móvil si solo cambia la altura (barra de dirección)
+        if (window.innerWidth < 768 && newW === lastWidth) return;
+        lastWidth = newW;
+
         renderer.setSize(newW, newH);
         camera.aspect = newW / newH;
         camera.updateProjectionMatrix();
