@@ -601,8 +601,8 @@ function handleResize() {
     
     // Lógica responsive mejorada para evitar que el texto se salga
     if (width < 600) {
-        if(activeTextGroup) activeTextGroup.scale.set(0.40, 0.40, 0.40); // Un poco más anchas
-        if(activeTextGroup) activeTextGroup.position.y = 70;             // Ajuste vertical para compensar las 3 líneas
+        if(activeTextGroup) activeTextGroup.scale.set(0.22, 0.22, 0.22); // Reducido drásticamente para evitar desbordamiento
+        if(activeTextGroup) activeTextGroup.position.y = 50;             // Ajuste vertical
         CONFIG.triangleOffsetX = 0; // Centrado en móvil
         if(triangleGroup) triangleGroup.scale.set(0.4, 0.4, 0.4); // Reducir triángulo en móvil
     } else {
