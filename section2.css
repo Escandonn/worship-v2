@@ -1,7 +1,7 @@
 #section2 {
     position: relative;
     width: 100%;
-    height: 100vh;
+    height: 100svh; /* Altura estable para móviles */
     background-color: #050505; /* Un negro ligeramente más claro que el hero */
     display: flex;
     flex-direction: column;

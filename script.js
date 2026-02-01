@@ -585,9 +585,15 @@ function animate() {
     renderer.render(sceneText, camera); // Renderiza el texto encima
 }
 
+let lastWidth = window.innerWidth;
+
 function handleResize() {
     const width = window.innerWidth;
     const height = window.innerHeight;
+
+    // Mobile fix: Evitar recalculo si solo cambia la altura (barra de dirección)
+    if (width < 800 && width === lastWidth) return;
+    lastWidth = width;
 
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
