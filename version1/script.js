@@ -147,7 +147,20 @@ function createTextPhrase(textString) {
 
     // 1. Lógica de división de líneas para textos largos
     let lines = [];
-    if (textString.length > 20) {
+    const isMobile = window.innerWidth < 600;
+
+    if (isMobile) {
+        const words = textString.split(' ');
+        if (words.length >= 3) {
+            const third = Math.ceil(words.length / 3);
+            const twoThirds = Math.ceil((words.length * 2) / 3);
+            lines.push(words.slice(0, third).join(' '));
+            lines.push(words.slice(third, twoThirds).join(' '));
+            lines.push(words.slice(twoThirds).join(' '));
+        } else {
+            lines.push(textString);
+        }
+    } else if (textString.length > 20) {
         const words = textString.split(' ');
         const mid = Math.ceil(words.length / 2);
         lines.push(words.slice(0, mid).join(' '));
@@ -567,8 +580,8 @@ function handleResize() {
     
     // Lógica responsive mejorada para evitar que el texto se salga
     if (width < 600) {
-        if(activeTextGroup) activeTextGroup.scale.set(0.35, 0.35, 0.35); // Escala más segura para textos largos
-        if(activeTextGroup) activeTextGroup.position.y = 60;             // Ajuste vertical para compensar las 2 líneas
+        if(activeTextGroup) activeTextGroup.scale.set(0.3, 0.3, 0.3);    // Escala reducida para evitar bordes con 3 líneas
+        if(activeTextGroup) activeTextGroup.position.y = 70;             // Ajuste vertical para compensar las 3 líneas
         CONFIG.triangleOffsetX = 0; // Centrado en móvil
         if(triangleGroup) triangleGroup.scale.set(0.4, 0.4, 0.4); // Reducir triángulo en móvil
     } else {
