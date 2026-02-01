@@ -580,7 +580,7 @@ function handleResize() {
     
     // Lógica responsive mejorada para evitar que el texto se salga
     if (width < 600) {
-        if(activeTextGroup) activeTextGroup.scale.set(0.3, 0.3, 0.3);    // Escala reducida para evitar bordes con 3 líneas
+        if(activeTextGroup) activeTextGroup.scale.set(0.40, 0.40, 0.40); // Un poco más anchas
         if(activeTextGroup) activeTextGroup.position.y = 70;             // Ajuste vertical para compensar las 3 líneas
         CONFIG.triangleOffsetX = 0; // Centrado en móvil
         if(triangleGroup) triangleGroup.scale.set(0.4, 0.4, 0.4); // Reducir triángulo en móvil
