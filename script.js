@@ -732,13 +732,35 @@ async function handleSendMessage() {
 }
 
 if (chatbotHeader && chatbotContainer) {
-    chatbotHeader.addEventListener('click', () => {
+    chatbotHeader.addEventListener('click', (e) => {
+        e.stopPropagation(); // Evitar conflicto con el click del contenedor
         chatbotContainer.classList.toggle('expanded');
+    });
+
+    // Click en la esfera flotante para abrir
+    chatbotContainer.addEventListener('click', () => {
+        if (chatbotContainer.classList.contains('floating-mode') && !chatbotContainer.classList.contains('expanded')) {
+            chatbotContainer.classList.add('expanded');
+        }
     });
 
     // Event Listeners para el chat
     chatSendBtn.addEventListener('click', handleSendMessage);
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleSendMessage();
+    });
+
+    // Detectar Scroll para activar modo flotante (Sección 2 en adelante)
+    window.addEventListener('scroll', () => {
+        const scrollY = window.scrollY;
+        const heroHeight = window.innerHeight;
+
+        if (scrollY > heroHeight * 0.5) { // Al bajar de la mitad del Hero
+            if (!chatbotContainer.classList.contains('expanded')) {
+                chatbotContainer.classList.add('floating-mode');
+            }
+        } else {
+            chatbotContainer.classList.remove('floating-mode');
+        }
     });
 }
