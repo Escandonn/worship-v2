@@ -10,7 +10,7 @@ const CONFIG = {
     colorLineas: 0xffffff,
     
     // Configuración del Texto
-    frases: ["Bienvenido a worship", "SOMOS EL SIGUIENTE NIVEL EN PAGINAS WEB"],
+    frases: ["Bienvenido a worship", "EL SIGUIENTE NIVEL EN PAGINAS WEB"],
     colorMain: 0x2266ff,       // Azul (App.js)
     colorBorder: 0xffffff,     // Blanco (App.js)
     typingSpeed: 100,
