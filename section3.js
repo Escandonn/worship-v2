@@ -76,9 +76,19 @@ function initMatrixStrip(container, font, direction = 'down') {
         columns.push({ mesh, speed, rotSpeed: (Math.random() - 0.5) * 0.05 });
     }
 
+    // Optimización: Pausar si no está visible (Elimina el LAG)
+    let isVisible = false;
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            isVisible = entry.isIntersecting;
+        });
+    });
+    observer.observe(container);
+
     // 6. Animación
     const animate = () => {
         requestAnimationFrame(animate);
+        if (!isVisible) return; // Detener renderizado si no se ve
 
         columns.forEach(col => {
             // Lógica de Dirección (Arriba / Abajo)

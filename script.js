@@ -65,10 +65,6 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.autoClear = false; 
 
-// Bloquear scroll al inicio para forzar la intro
-document.body.style.overflow = 'hidden';
-window.scrollTo(0, 0);
-
 // Inyectar el canvas en el contenedor específico del Hero
 const heroContainer = document.getElementById('hero-container');
 if (heroContainer) {
@@ -131,7 +127,6 @@ let lastShuffleTime = 0;
 // Variables Mobile
 let mobileStep = 0;
 let lastMobileChange = 0;
-let scrollUnlocked = false; // Bandera para optimizar el acceso al DOM
 
 // Materiales globales (Transparentes para permitir Fade Out)
 const mainMat = new THREE.MeshPhongMaterial({ 
@@ -505,12 +500,6 @@ function animate() {
     }
     else if (currentState === 'SHOW_CARDS') {
         const isMobile = window.innerWidth < 800;
-
-        // Habilitar scroll después de 1 segundo (tiempo de transición de las cards)
-        if (!scrollUnlocked && (now - stateStartTime > 1000)) {
-            document.body.style.overflow = 'auto';
-            scrollUnlocked = true;
-        }
 
         if (!isMobile) {
             // --- LÓGICA DESKTOP ---
