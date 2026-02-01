@@ -248,6 +248,19 @@ function createTextPhrase(textString) {
 const loader = new FontLoader();
 loader.load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json', (font) => {
     loadedFont = font;
+    // Pre-cargar triángulo para evitar lag al mostrarlo
+    createTriangle();
+    if (triangleGroup) triangleGroup.visible = false;
+
+    // --- OPTIMIZACIÓN: Forzar compilación de shaders ---
+    // Creamos un objeto dummy temporal para compilar el material del texto
+    const dummyGeo = new TextGeometry(' ', { font: font, size: 1, height: 0.1 });
+    const dummyMesh = new THREE.Mesh(dummyGeo, mainMat);
+    sceneText.add(dummyMesh);
+    renderer.compile(scene, camera);     // Compila fondo/líneas
+    renderer.compile(sceneText, camera); // Compila texto/triángulo
+    sceneText.remove(dummyMesh);         // Limpieza
+    
     currentState = 'SETUP';
 });
 
@@ -273,6 +286,11 @@ function createTriangle() {
         emissiveIntensity: 1
     });
     triangleMesh = new THREE.Mesh(tubeGeo, tubeMat);
+    
+    // Configuración para animación de "Dibujado Progresivo"
+    triangleMesh.userData.maxIndex = tubeGeo.index.count; // Guardar total de vértices
+    tubeGeo.setDrawRange(0, 0); // Iniciar invisible (0 vértices dibujados)
+    
     triangleGroup.add(triangleMesh);
 
     // 2. Círculo (TorusGeometry)
@@ -424,7 +442,10 @@ function animate() {
                 nav.style.pointerEvents = 'auto';
 
                 // Iniciar animación del triángulo
-                createTriangle();
+                if (triangleGroup) {
+                    triangleGroup.visible = true;
+                    if (circleMesh) circleMesh.material.opacity = 0; // Resetear opacidad
+                }
                 currentState = 'ANIMATE_TRIANGLE';
                 stateStartTime = now;
             }
@@ -433,6 +454,12 @@ function animate() {
     else if (currentState === 'ANIMATE_TRIANGLE') {
         const progress = Math.min((now - stateStartTime) / CONFIG.duracionTriangulo, 1);
         
+        // Animación: Dibujado progresivo del tubo
+        if (triangleMesh) {
+            const drawCount = Math.floor(progress * triangleMesh.userData.maxIndex);
+            triangleMesh.geometry.setDrawRange(0, drawCount);
+        }
+
         // Posición relativa a la cámara (misma profundidad que el texto)
         const zPos = camera.position.z - 800;
         const startX = -1500; // Entra desde la izquierda fuera de pantalla
