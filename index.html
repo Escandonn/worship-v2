@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matriz 3D Three.js</title>
+    <title>Worship V2</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="section2.css"> <!-- CSS Sección 2 -->
+    
+    <!-- Import Map para Three.js -->
     <script type="importmap">
         {
             "imports": {
@@ -14,137 +15,102 @@
             }
         }
     </script>
-    <style>
-        /* Estilos para el Navbar: Botones serios con iluminación */
-        .nav-container {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            padding-top: 30px;
-        }
-
-        .nav-item {
-            text-decoration: none;
-            color: #888888; /* Gris serio */
-            background: rgba(10, 10, 10, 0.85); /* Fondo oscuro tipo botón */
-            padding: 10px 25px;
-            border: 1px solid #333333;
-            border-radius: 2px;
-            font-family: sans-serif;
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(4px);
-        }
-
-        .nav-item:hover {
-            color: #ffffff;
-            border-color: #666666;
-            background: rgba(20, 20, 20, 1);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.15); /* Iluminación blanca elegante */
-            text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
-        }
-
-        /* Ajuste Móvil: Navbar lineal y compacto */
-        @media (max-width: 600px) {
-            .nav-container {
-                flex-wrap: nowrap; /* Evita que se apilen en dos filas */
-                gap: 5px; /* Reduce espacio entre botones */
-                padding-top: 15px; /* Reduce altura superior */
-            }
-            .nav-item {
-                padding: 8px 10px; /* Botones más pequeños */
-                font-size: 0.7rem;
-                white-space: nowrap; /* Texto en una sola línea */
-            }
-        }
-    </style>
 </head>
 <body>
-    <!-- SECCIÓN 1: HERO 3D (100vh) -->
-    <div id="hero-container" style="width: 100%; height: 100svh; position: relative; overflow: hidden;">
 
-    <!-- Navbar importado (Oculto inicialmente) -->
-    <nav style="opacity: 0; pointer-events: none; transition: opacity 1.5s ease;">
+    <!-- Navbar (Inicialmente oculta, controlada por script.js) -->
+    <nav style="opacity: 0; pointer-events: none; transition: opacity 1s;">
         <div class="nav-container">
             <a href="#" class="nav-item inicio">Inicio</a>
-            <a href="#" class="nav-item sobre"> Nosotros</a>
+            <a href="#" class="nav-item sobre">Sobre Nosotros</a>
             <a href="#" class="nav-item acerca">Acerca de</a>
         </div>
     </nav>
 
-    <!-- Cards de Información (Ocultas inicialmente) -->
-    <div id="cards-container">
-        <!-- Cards Planas (Se posicionan con JS/CSS) -->
-        <div class="info-card card-4">
-            <h3>DESARROLLO</h3>
-            <p>Código limpio y escalable para el futuro.</p>
-        </div>
-        <div class="info-card card-5">
-            <h3>MARKETING</h3>
-            <p>Alcance global que posiciona tu marca.</p>
-        </div>
-        <div class="info-card card-6">
-            <h3>SOPORTE</h3>
-            <p>Asistencia técnica garantizada 24/7.</p>
-        </div>
-        <div class="info-card card-1">
-            <h3>INNOVACIÓN</h3>
-            <p>Tecnología de punta para resultados extraordinarios.</p>
-        </div>
-        <div class="info-card card-2">
-            <h3>DISEÑO</h3>
-            <p>Estética funcional que cautiva a tu audiencia.</p>
-        </div>
-        <div class="info-card card-3">
-            <h3>ESTRATEGIA</h3>
-            <p>Crecimiento escalable basado en datos reales.</p>
+    <!-- Sección 1: Hero (Manejado por script.js) -->
+    <div id="hero-container" class="hero" style="position: relative; height: 100vh; overflow: hidden; background: #000;">
+        <!-- El canvas de Three.js se inyectará aquí automáticamente -->
+        
+        <!-- Cards Flotantes (Orden específico para coincidir con script.js: 4, 5, 6, 1, 2, 3) -->
+        <div id="cards-container">
+            <div class="info-card card-4">
+                <h3>Desarrollo</h3>
+                <p>Código limpio, rápido y escalable.</p>
+            </div>
+            <div class="info-card card-5">
+                <h3>Marketing</h3>
+                <p>Conecta con tu audiencia ideal.</p>
+            </div>
+            <div class="info-card card-6">
+                <h3>Soporte</h3>
+                <p>Estamos contigo en cada paso.</p>
+            </div>
+            <div class="info-card card-1">
+                <h3>Innovación</h3>
+                <p>Tecnología de punta para tu negocio.</p>
+            </div>
+            <div class="info-card card-2">
+                <h3>Diseño</h3>
+                <p>Estética que cautiva y convierte.</p>
+            </div>
+            <div class="info-card card-3">
+                <h3>Estrategia</h3>
+                <p>Planificación para el crecimiento real.</p>
+            </div>
         </div>
     </div>
 
-    </div> <!-- Fin hero-container -->
-
-    <!-- SECCIÓN 2: NUEVO CONTENIDO (100vh) -->
-    <section id="section2">
-        <div class="sec2-content">
-            <h2 class="sec2-title">Nuestra Filosofía</h2>
-            <p class="sec2-text">Creamos experiencias digitales que trascienden lo visual. <br>Fusionamos arte, código y estrategia para definir el futuro de la web.</p>
+    <!-- Sección 2: Filosofía (Manejado por section2.js) -->
+    <section id="section2" style="position: relative; height: 100vh; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+        <div class="sec2-content" style="position: relative; z-index: 10; text-align: center; max-width: 800px; padding: 2rem;">
+            <h2 class="sec2-title" style="font-size: 3rem; margin-bottom: 1rem; color: #fff;">Nuestra Filosofía</h2>
+            <p class="sec2-text" style="font-size: 1.2rem; color: #ccc; line-height: 1.6;">
+                Creamos experiencias digitales que trascienden lo visual. <br>Fusionamos arte, código y estrategia para definir el futuro de la web.
+            </p>
         </div>
     </section>
 
-    <!-- El canvas será generado automáticamente por Three.js -->
-    <script type="module" src="script.js"></script>
-    <script type="module" src="section2.js"></script> <!-- JS Sección 2 -->
+    <!-- Sección 3: Carrusel 3D (Manejado por section3.js) -->
+    <section id="section-3" style="position: relative; height: 100vh; width: 100%; background: #050505; overflow: hidden;">
+        <!-- El canvas del carrusel se inyectará aquí -->
+    </section>
 
-    <!-- CHATBOT ASESOR VIRTUAL RISP -->
+    <!-- Sección 4: Matrix Footer (Manejado por section4.js) -->
+    <section id="section-4" style="position: relative; height: 20vh; width: 100%; background: #000; overflow: hidden;">
+        <!-- Canvas inyectado por JS -->
+    </section>
+
+    <!-- Chatbot (Manejado por script.js) -->
     <div id="chatbot-container">
-        <!-- Icono Flotante (Triángulo y Círculo) -->
-        <div id="floating-content">
-            <div class="floating-triangle"></div>
-            <span class="floating-text">Habla<br>conmigo</span>
-        </div>
-
-        <div class="chatbot-hint">Presiona y habla conmigo ya</div>
         <div id="chatbot-header">
             <div class="chatbot-status"></div>
-            <span class="chatbot-title">Habla con nuestro asesor virtual Risp</span>
-            <button id="chatbot-toggle">▲</button>
-        
+            <span class="chatbot-title">Asesor Virtual Risp</span>
+            <button id="chatbot-toggle">▼</button>
         </div>
+        <div class="chatbot-hint">Presiona y habla</div>
         
-        <!-- Interfaz de Chat Real -->
         <div id="chat-interface">
-            <!-- Logo de Fondo (Círculo y Triángulo) -->
             <div class="chatbot-bg-logo">
                 <div class="triangle"></div>
             </div>
             <div id="chat-history"></div>
             <div id="chat-input-wrapper">
-                <input type="text" id="chat-input" placeholder="Escribe tu duda aquí..." autocomplete="off">
-                <button id="chat-send-btn">➤</button>
+                <input type="text" id="chat-input" placeholder="Escribe tu mensaje...">
+                <button id="chat-send-btn">></button>
             </div>
         </div>
+
+        <div id="floating-content">
+            <div class="floating-triangle"></div>
+            <div class="floating-text">PRESIONA Y HABLA</div>
+        </div>
     </div>
+
+    <!-- Scripts -->
+    <script type="module" src="script.js"></script>
+    <script type="module" src="section2.js"></script>
+    <script type="module" src="section3.js"></script>
+    <script type="module" src="section4.js"></script>
+
 </body>
 </html>
