@@ -223,8 +223,8 @@ function initCarousel(container) {
             // Esto ahorra muchos cálculos en el bucle de animación.
             phraseGroup.lookAt(camera.position);
 
-            const baseSpeed = 0.06;
-            const speedBonus = text.length > 25 ? 0.04 : 0; // Aumentar ligeramente el bonus para textos largos
+            const baseSpeed = 0.09;
+            const speedBonus = text.length > 25 ? 0.09 : 0; // Aumentar ligeramente el bonus para textos largos
             phraseGroup.userData = { 
                 index: i,
                 baseSpeed: baseSpeed + speedBonus, // Guardar velocidad base
