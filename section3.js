@@ -157,7 +157,7 @@ function initCarousel(container) {
         
         // Configuración de Anillos
         if (isMobile) {
-            ringLeft.position.set(0, 0, 0);
+            ringLeft.position.set(0, 0, -10);
             ringRight.visible = false;
         } else {
             ringLeft.position.set(-15, 0, 0); // Más centrados (antes 25)
@@ -167,7 +167,7 @@ function initCarousel(container) {
 
         fallingTexts.forEach(mesh => {
             if (isMobile) {
-                mesh.scale.set(0.6, 0.6, 0.6); // Letras más pequeñas en móvil
+                mesh.scale.set(0.4, 0.4, 0.4); // Letras más pequeñas en móvil
                 mesh.position.x = 0;           // Una sola columna central
             } else {
                 mesh.scale.set(1, 1, 1);       // Tamaño normal en PC
