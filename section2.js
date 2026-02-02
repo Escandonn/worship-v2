@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function updateArrowTargets() {
-    const isMobile = window.innerWidth < 768;
+    const isMobile = window.innerWidth < 102;
 
     if (isMobile) {
         // MÓVIL: Flechas Arriba/Abajo. Cambio Horizontal.

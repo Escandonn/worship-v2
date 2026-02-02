@@ -153,7 +153,7 @@ function createTextPhrase(textString) {
 
     // 1. Lógica de división de líneas para textos largos
     let lines = [];
-    const isMobile = window.innerWidth < 800;
+    const isMobile = window.innerWidth < 1025;
 
     if (isMobile) {
         const words = textString.split(' ');
@@ -350,7 +350,7 @@ function animate() {
         // FIX: Anclar el texto a la cámara para mantener el tamaño constante
         if (activeTextGroup) {
             // En móviles lo mandamos más al fondo (1600) para que quepa mejor en el campo de visión
-            const isMobile = window.innerWidth < 800;
+            const isMobile = window.innerWidth < 1025;
             activeTextGroup.position.z = camera.position.z - (isMobile ? 1600 : 800);
         }
 
@@ -493,13 +493,13 @@ function animate() {
             createConnectors();
             
             // Inicializar lógica Mobile si es necesario
-            if (window.innerWidth < 800) {
+            if (window.innerWidth < 1025) {
                 lastMobileChange = now - 3000; // Forzar cambio inmediato (ajustado a 3s)
             }
         }
     }
     else if (currentState === 'SHOW_CARDS') {
-        const isMobile = window.innerWidth < 800;
+        const isMobile = window.innerWidth < 1025;
 
         if (!isMobile) {
             // --- LÓGICA DESKTOP ---
@@ -612,7 +612,7 @@ function handleResize() {
     const height = window.innerHeight;
 
     // Mobile fix: Evitar recalculo si solo cambia la altura (barra de dirección)
-    if (width < 800 && width === lastWidth) return;
+    if (width < 1025 && width === lastWidth) return;
     lastWidth = width;
 
     camera.aspect = width / height;
@@ -620,7 +620,7 @@ function handleResize() {
     renderer.setSize(width, height);
     
     // Lógica responsive mejorada para evitar que el texto se salga
-    if (width < 800) {
+    if (width < 1025) {
         if(activeTextGroup) activeTextGroup.scale.set(0.35, 0.35, 0.35); // Escala ajustada para la nueva profundidad
         if(activeTextGroup) activeTextGroup.position.y = 50;             // Ajuste vertical
         CONFIG.triangleOffsetX = 0; // Centrado en móvil
