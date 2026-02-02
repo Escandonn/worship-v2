@@ -248,7 +248,7 @@ function initCarousel(container) {
     // Función para manejar el layout responsive (1 columna móvil vs 3 columnas PC)
     function updateLayout() {
         const width = container.clientWidth;
-        const isMobile = width < 768;
+        const isMobile = width < 1025;
         
         // Configuración de Anillos
         if (isMobile) {
@@ -291,7 +291,7 @@ function initCarousel(container) {
     const animate = () => {
         requestAnimationFrame(animate);
 
-        const isMobile = container.clientWidth < 768;
+        const isMobile = container.clientWidth < 1025;
 
         if (!isVisible) return; // PAUSA INTELIGENTE: No gastar recursos si no se ve
         
