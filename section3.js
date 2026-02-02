@@ -6,12 +6,11 @@ import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Buscamos el contenedor principal de la sección 3
     const container = document.getElementById('section-3');
+    if (!container) return;
 
-    if (container) {
-        initCarousel(container);
-    }
+    // Cargar la escena 3D inmediatamente al inicio para una transición fluida.
+    initCarousel(container);
 });
 
 function initCarousel(container) {
@@ -33,6 +32,10 @@ function initCarousel(container) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
+    
+    // SUAVIZADO: El canvas inicia invisible y aparece suavemente cuando está listo
+    renderer.domElement.style.opacity = '0';
+    renderer.domElement.style.transition = 'opacity 1.5s ease-in-out';
     container.appendChild(renderer.domElement);
 
     // 4. Iluminación para resaltar los colores brillantes
@@ -55,6 +58,48 @@ function initCarousel(container) {
     composer.addPass(renderScene);
     composer.addPass(bloomPass);
 
+    // Particle System for impact effect
+    const particleCount = 500;
+    const particles = [];
+    const particleGeometry = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(particleCount * 3);
+    const pMaterial = new THREE.PointsMaterial({
+        color: 0xcccccc, // Color gris/blanco para que combine
+        size: 0.5,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        depthTest: false, // CORRECCIÓN: Asegura que las partículas se vean sobre otros objetos
+    });
+
+    for (let i = 0; i < particleCount; i++) {
+        particles.push({
+            position: new THREE.Vector3(),
+            velocity: new THREE.Vector3(),
+            life: 0,
+        });
+        particlePositions[i * 3 + 1] = 9999; // Posición Y inicial fuera de la vista
+    }
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    const particleSystem = new THREE.Points(particleGeometry, pMaterial);
+    scene.add(particleSystem);
+
+    let nextParticle = 0;
+    function spawnParticles(origin) {
+        const count = 25; // Cantidad de partículas por impacto
+        for (let i = 0; i < count; i++) {
+            const p = particles[nextParticle];
+            p.life = 1.0;
+            p.position.copy(origin);
+            
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 0.05 + Math.random() * 0.15;
+            p.velocity.set(Math.cos(angle) * speed, Math.sin(angle) * speed, (Math.random() - 0.5) * 0.1);
+            p.velocity.y += 0.05; // Un ligero impulso hacia arriba inicial
+
+            nextParticle = (nextParticle + 1) % particleCount;
+        }
+    }
+
     // 5. Crear los Carruseles (Dos Ruedas)
     const ringLeft = new THREE.Group();
     const ringRight = new THREE.Group();
@@ -63,18 +108,20 @@ function initCarousel(container) {
 
     const itemCount = 60; 
     const radius = 12;
-    const colors = [0xff0055, 0x00ffaa, 0x5500ff, 0xffff00, 0x00ffff, 0xff00ff];
+    // Paleta de colores opacos en escala de grises
+    const colors = [0x333333, 0x555555, 0x777777, 0x999999, 0xbbbbbb, 0xdddddd];
     const geometry = new THREE.BoxGeometry(0.1, 0.1, 1); 
 
     function populateRing(group) {
         for (let i = 0; i < itemCount; i++) {
             const color = colors[i % colors.length];
+            // Material más opaco, menos brillante
             const material = new THREE.MeshStandardMaterial({ 
                 color: color,
-                emissive: color,
-                emissiveIntensity: 2.5,
-                roughness: 0.1,
-                metalness: 0.5
+                emissive: 0x111111, // Brillo sutil
+                emissiveIntensity: 1,
+                roughness: 0.8, // Más rugoso, menos reflejo
+                metalness: 0.2
             });
 
             const mesh = new THREE.Mesh(geometry, material);
@@ -98,56 +145,77 @@ function initCarousel(container) {
     // 6. Textos Cayendo (Frases Contextuales)
     const fallingTexts = [];
     const phrases = [
-        "DESARROLLO WEB", "INNOVACION 3D", "EXPERIENCIA DIGITAL", "FUTURO INMERSIVO", "WORSHIP V2",
-        "ESTRATEGIA UI/UX", "ESTRATEGIA DIGITAL", "CODIGO LIMPIO", "PERFORMANCE", "SEO AVANZADO",
-        "ANIMACIONES WEB", "INTERACTIVIDAD", "ARQUITECTURA WEB", "SOPORTE 24/7", "CREATIVIDAD",
-        "TECNOLOGIA", "VANGUARDIA", "IMPACTO VISUAL", "CONVERSION", "IDENTIDAD DE MARCA"
+        "ARQUITECTURA DE SOFTWARE", "SOLUCIONES CLOUD-NATIVE", "OPTIMIZACION DE RENDIMIENTO", "CONSULTORIA ESTRATEGICA", "WORSHIP ENTERPRISE",
+        "DISEÑO DE EXPERIENCIA (UX)", "TRANSFORMACION DIGITAL", "CODIGO ESCALABLE", "ANALISIS DE DATOS", "SEO TECNICO AVANZADO",
+        "INTEGRACION DE API RESTFUL", "SEGURIDAD WEB (OWASP)", "METODOLOGIAS AGILE", "SOPORTE DEDICADO", "INNOVACION DISRUPTIVA",
+        "INTELIGENCIA ARTIFICIAL", "VISUALIZACION 3D", "BRANDING CORPORATIVO", "OPTIMIZACION DE CONVERSION", "IDENTIDAD DIGITAL"
     ];
 
     const spacing = 35; // Espaciado vertical amplio para que caigan una a una
 
     const loader = new FontLoader();
     loader.load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json', (font) => {
-        phrases.forEach((text, i) => {
+        // OPTIMIZACIÓN: Crear geometrías de texto de forma incremental para no bloquear el hilo principal.
+        let i = 0;
+        function createPhrasesIncrementally() {
+            if (i >= phrases.length) {
+                // --- Todas las frases creadas, finalizar la configuración ---
+                updateLayout();
+                // MOSTRAR ESCENA: Una vez generada la geometría, hacemos fade-in del canvas
+                setTimeout(() => {
+                    renderer.domElement.style.opacity = '1';
+                }, 100);
+                return;
+            }
+
+            const text = phrases[i];
+            const phraseGroup = new THREE.Group();
+
             const textGeo = new TextGeometry(text, {
-                font: font,
-                size: 2.0, // Tamaño base ajustado
-                height: 0.2,
-                curveSegments: 12,
-                bevelEnabled: true,
-                bevelThickness: 0.03,
-                bevelSize: 0.02,
-                bevelOffset: 0,
-                bevelSegments: 5
+                font: font, size: 2.0, height: 0.2, curveSegments: 12,
+                bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.02,
+                bevelOffset: 0, bevelSegments: 5
             });
             textGeo.center();
 
             const textMat = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                emissive: 0xffffff,
-                emissiveIntensity: 0.5,
-                roughness: 0.4,
-                metalness: 0.8
+                color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.5,
+                roughness: 0.4, metalness: 0.8
             });
 
             const textMesh = new THREE.Mesh(textGeo, textMat);
+
+            const cardWidth = text.length * 0.9;
+            const cardHeight = 3.5;
+            const cardGeo = new THREE.PlaneGeometry(cardWidth, cardHeight);
+            const cardMat = new THREE.MeshBasicMaterial({
+                color: 0x101010, transparent: true, opacity: 0.8, side: THREE.DoubleSide
+            });
+            const cardMesh = new THREE.Mesh(cardGeo, cardMat);
+            cardMesh.position.z = -0.5;
+
+            phraseGroup.add(textMesh);
+            phraseGroup.add(cardMesh);
             
-            // Guardar índice y velocidad aleatoria en userData
-            textMesh.userData = { 
+            const baseSpeed = 0.06;
+            const speedBonus = text.length > 25 ? 0.03 : 0;
+            phraseGroup.userData = { 
                 index: i,
-                speed: 0.08 // Velocidad constante y más lenta
+                speed: baseSpeed + speedBonus,
+                hasSpawned: false
             };
 
-            // Posición inicial Y escalonada
-            textMesh.position.y = 25 + (i * spacing); 
-            textMesh.position.z = 0;
-            
-            scene.add(textMesh);
-            fallingTexts.push(textMesh);
-        });
-        
-        // Aplicar layout inicial una vez cargada la fuente
-        updateLayout();
+            phraseGroup.position.y = 25 + (i * spacing); 
+            scene.add(phraseGroup);
+            fallingTexts.push(phraseGroup);
+
+            i++;
+            // Programar la creación de la siguiente frase en el próximo frame disponible.
+            requestAnimationFrame(createPhrasesIncrementally);
+        }
+
+        // Iniciar el proceso de creación incremental.
+        createPhrasesIncrementally();
     });
 
     // Función para manejar el layout responsive (1 columna móvil vs 3 columnas PC)
@@ -160,27 +228,39 @@ function initCarousel(container) {
             ringLeft.position.set(0, 0, -10);
             ringRight.visible = false;
         } else {
-            ringLeft.position.set(-15, 0, 0); // Más centrados (antes 25)
-            ringRight.position.set(15, 0, 0); // Más centrados (antes 25)
+            ringLeft.position.set(-12, 0, 0); // Más centrados
+            ringRight.position.set(12, 0, 0); // Más centrados
             ringRight.visible = true;
         }
 
-        fallingTexts.forEach(mesh => {
+        fallingTexts.forEach(group => {
             if (isMobile) {
-                mesh.scale.set(0.4, 0.4, 0.4); // Letras más pequeñas en móvil
-                mesh.position.x = 0;           // Una sola columna central
+                group.scale.set(0.4, 0.4, 0.4); // Letras más pequeñas en móvil
+                group.position.x = 0;           // Una sola columna central
             } else {
-                mesh.scale.set(1, 1, 1);       // Tamaño normal en PC
-                // 2 Columnas alternadas: Izquierda (-15) y Derecha (15)
-                const isRight = mesh.userData.index % 2 !== 0;
-                mesh.position.x = isRight ? 15 : -15;
+                group.scale.set(0.8, 0.8, 0.8);       // Letras más pequeñas en PC
+                // 2 Columnas alternadas: Izquierda (-12) y Derecha (12)
+                const isRight = group.userData.index % 2 !== 0;
+                group.position.x = isRight ? 12 : -12;
             }
         });
     }
 
+    // CONTROL DE RENDIMIENTO:
+    // Aunque cargamos la escena antes, solo animamos cuando el usuario la ve.
+    let isVisible = false;
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            isVisible = entry.isIntersecting;
+        });
+    }, { threshold: 0 });
+    observer.observe(container);
+
     // 7. Animación
     const animate = () => {
         requestAnimationFrame(animate);
+
+        if (!isVisible) return; // PAUSA INTELIGENTE: No gastar recursos si no se ve
         
         const time = Date.now();
 
@@ -195,32 +275,63 @@ function initCarousel(container) {
         ringRight.rotation.z = Math.sin(time * 0.002 + 1) * 0.15;
         ringRight.rotation.x = Math.cos(time * 0.001 + 1) * 0.1;
 
+        // Animar Partículas
+        for (let i = 0; i < particleCount; i++) {
+            const p = particles[i];
+            if (p.life > 0) {
+                p.position.add(p.velocity);
+                p.velocity.y -= 0.003; // Gravedad
+                p.life -= 0.015;
+
+                if (p.life <= 0) {
+                    particlePositions[i * 3 + 1] = 9999; // Mover fuera de la vista
+                } else {
+                    particlePositions[i * 3] = p.position.x;
+                    particlePositions[i * 3 + 1] = p.position.y;
+                    particlePositions[i * 3 + 2] = p.position.z;
+                }
+            }
+        }
+        particleGeometry.attributes.position.needsUpdate = true;
+
         // Animar Textos
-        fallingTexts.forEach(mesh => {
-            mesh.position.y -= mesh.userData.speed; // Bajando lento
+        fallingTexts.forEach(group => {
+            group.position.y -= group.userData.speed; // Bajando con velocidad variable
+
+            const textMesh = group.children[0];
+            const cardMesh = group.children[1];
 
             // Efecto de desaparecer al llegar al círculo (y=0)
-            if (mesh.position.y < 10) {
+            if (group.position.y < 10) {
                 // Fade out (Transparencia progresiva hasta 0)
-                const opacity = Math.max(0, mesh.position.y / 10);
-                mesh.material.transparent = true;
-                mesh.material.opacity = opacity;
+                const opacity = Math.max(0, group.position.y / 10);
+                textMesh.material.transparent = true;
+                textMesh.material.opacity = opacity;
+                cardMesh.material.opacity = opacity * 0.8; // La tarjeta se desvanece con el texto
                 
                 // Flash de luz antes de desaparecer
-                mesh.material.emissiveIntensity = 0.5 + (1 - opacity) * 3;
+                textMesh.material.emissiveIntensity = 0.5 + (1 - opacity) * 3;
             } else {
-                mesh.material.opacity = 1;
-                mesh.material.emissiveIntensity = 0.5;
+                textMesh.material.opacity = 1;
+                cardMesh.material.opacity = 0.8;
+                textMesh.material.emissiveIntensity = 0.5;
+                group.userData.hasSpawned = false; // Resetear flag cuando está arriba
             }
 
             // Reset inmediato al tocar el centro (y=0)
-            if (mesh.position.y <= 0) {
+            if (group.position.y <= 0) {
+                // Spawn de partículas solo una vez
+                if (!group.userData.hasSpawned) {
+                    const spawnPosition = new THREE.Vector3(group.position.x, 0, 0);
+                    spawnParticles(spawnPosition);
+                    group.userData.hasSpawned = true;
+                }
                 // Reiniciar arriba manteniendo el espaciado exacto
-                mesh.position.y = phrases.length * spacing; 
+                group.position.y = phrases.length * spacing;
             }
             
             // Orientar hacia la cámara para legibilidad perfecta
-            mesh.lookAt(camera.position);
+            group.lookAt(camera.position);
         });
 
         composer.render();
