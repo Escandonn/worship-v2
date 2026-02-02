@@ -224,7 +224,7 @@ function initCarousel(container) {
             phraseGroup.lookAt(camera.position);
 
             const baseSpeed = 0.06;
-            const speedBonus = text.length > 25 ? 0.03 : 0;
+            const speedBonus = text.length > 25 ? 0.04 : 0; // Aumentar ligeramente el bonus para textos largos
             phraseGroup.userData = { 
                 index: i,
                 baseSpeed: baseSpeed + speedBonus, // Guardar velocidad base
@@ -265,7 +265,7 @@ function initCarousel(container) {
                 group.scale.set(0.4, 0.4, 0.4); // Letras más pequeñas en móvil
                 group.position.x = 0;           // Una sola columna central
                 // Acelerar en móvil
-                if (group.userData.baseSpeed) group.userData.speed = group.userData.baseSpeed * 1.4;
+                if (group.userData.baseSpeed) group.userData.speed = group.userData.baseSpeed * 2.0; // Más rápido en móvil
             } else {
                 group.scale.set(0.8, 0.8, 0.8);       // Letras más pequeñas en PC
                 // 2 Columnas alternadas: Izquierda (-12) y Derecha (12)
