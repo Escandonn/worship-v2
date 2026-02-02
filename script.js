@@ -782,10 +782,27 @@ if (chatbotHeader && chatbotContainer) {
         });
     };
 
+    const updateChatbotUI = () => {
+        const isExpanded = chatbotContainer.classList.contains('expanded');
+        const titleEl = chatbotHeader.querySelector('.chatbot-title');
+        const toggleBtn = document.getElementById('chatbot-toggle');
+
+        if (isExpanded) {
+            titleEl.textContent = 'Cerrar Chat';
+            toggleBtn.textContent = '✕';
+            toggleBtn.style.transform = 'rotate(0deg)'; // Anular rotación CSS para la X
+        } else {
+            titleEl.textContent = 'Asesor Virtual Risp';
+            toggleBtn.textContent = '▼';
+            toggleBtn.style.transform = ''; // Restaurar comportamiento CSS
+        }
+    };
+
     chatbotHeader.addEventListener('click', (e) => {
         e.stopPropagation(); // Evitar conflicto con el click del contenedor
         chatbotContainer.classList.toggle('expanded');
         updateNavVisibility();
+        updateChatbotUI();
     });
 
     // Click en la esfera flotante para abrir
@@ -793,6 +810,7 @@ if (chatbotHeader && chatbotContainer) {
         if (chatbotContainer.classList.contains('floating-mode') && !chatbotContainer.classList.contains('expanded')) {
             chatbotContainer.classList.add('expanded');
             updateNavVisibility();
+            updateChatbotUI();
         }
     });
 
