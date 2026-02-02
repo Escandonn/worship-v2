@@ -772,15 +772,27 @@ async function handleSendMessage() {
 }
 
 if (chatbotHeader && chatbotContainer) {
+    const navBtns = document.querySelectorAll('.nav-scroll-btn');
+
+    const updateNavVisibility = () => {
+        const isExpanded = chatbotContainer.classList.contains('expanded');
+        navBtns.forEach(btn => {
+            btn.style.opacity = isExpanded ? '0' : '1';
+            btn.style.pointerEvents = isExpanded ? 'none' : 'auto';
+        });
+    };
+
     chatbotHeader.addEventListener('click', (e) => {
         e.stopPropagation(); // Evitar conflicto con el click del contenedor
         chatbotContainer.classList.toggle('expanded');
+        updateNavVisibility();
     });
 
     // Click en la esfera flotante para abrir
     chatbotContainer.addEventListener('click', () => {
         if (chatbotContainer.classList.contains('floating-mode') && !chatbotContainer.classList.contains('expanded')) {
             chatbotContainer.classList.add('expanded');
+            updateNavVisibility();
         }
     });
 
@@ -827,4 +839,52 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+});
+
+// ==========================================
+// NAVEGACIÓN POR SECCIONES (SCROLL CONTROLADO)
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const sections = ['hero-container', 'section2', 'section-3', 'section-4'];
+    let currentSectionIndex = 0;
+    let isScrolling = false;
+
+    const btnPrev = document.getElementById('nav-prev');
+    const btnNext = document.getElementById('nav-next');
+
+    function scrollToSection(index) {
+        if (index < 0 || index >= sections.length) return;
+        if (isScrolling) return;
+
+        isScrolling = true;
+        currentSectionIndex = index;
+
+        const target = document.getElementById(sections[index]);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        setTimeout(() => {
+            isScrolling = false;
+        }, 1000);
+    }
+
+    if (btnPrev) {
+        btnPrev.addEventListener('click', () => scrollToSection(currentSectionIndex - 1));
+    }
+    if (btnNext) {
+        btnNext.addEventListener('click', () => scrollToSection(currentSectionIndex + 1));
+    }
+
+    // Bloquear scroll nativo y usar navegación por secciones
+    window.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (isScrolling) return;
+
+        if (e.deltaY > 0) {
+            scrollToSection(currentSectionIndex + 1);
+        } else {
+            scrollToSection(currentSectionIndex - 1);
+        }
+    }, { passive: false });
 });
