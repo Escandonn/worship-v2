@@ -16,6 +16,20 @@ const contents = [
     }
 ];
 
+// Configuraciones para el fractal de fondo
+const fractalConfigs = [
+    { angle: 0.55, depth: 9, hue: 200 },  // Filosofía: Azulado, complejo
+    { angle: 0.8, depth: 8, hue: 120 },   // Innovación: Verde, más abierto
+    { angle: 0.4, depth: 9, hue: 0 }      // Impacto: Rojo, denso
+];
+
+// Parámetros actuales del fractal para animación suave
+let fractalParams = {
+    angle: fractalConfigs[0].angle,
+    depth: fractalConfigs[0].depth,
+    hue: fractalConfigs[0].hue
+};
+
 let currentIndex = 0;
 let arrowLeft, arrowRight;
 let isSectionVisible = false; // Bandera para controlar el renderizado
@@ -46,7 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (section2) {
         observer.observe(section2);
-        initArrows(section2); // Iniciar escena 3D
+        initFractalBackground(section2); // NUEVO: Iniciar fondo de fractales
+        initArrows(section2); // Iniciar escena 3D de flechas
         
         // Iniciar ciclo de contenido (7 segundos)
         setInterval(() => {
@@ -62,8 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (titleEl) titleEl.textContent = contents[currentIndex].title;
                 if (textEl) textEl.innerHTML = contents[currentIndex].text;
 
-                // 3. Actualizar flechas
+                // 3. Actualizar flechas y FRACTALES
                 updateArrowTargets();
+                // La animación del fractal leerá currentIndex y se actualizará sola.
 
                 // 4. Mostrar texto (Fade In)
                 content.classList.add('active');
@@ -240,4 +256,80 @@ function initArrows(container) {
         updateArrowTargets();
     });
     resizeObserver.observe(container);
+}
+
+function initFractalBackground(container) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    container.insertBefore(canvas, container.firstChild); // Insertar al principio para que esté al fondo
+
+    // Estilos del canvas para que quede de fondo
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.zIndex = '0'; // Detrás del contenido pero visible
+    canvas.style.pointerEvents = 'none';
+
+    let width, height;
+
+    function resize() {
+        width = container.clientWidth;
+        height = container.clientHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(container);
+    resize();
+
+    function drawBranch(x, y, len, angle, depth) {
+        if (depth === 0) return;
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        const endX = x + len * Math.cos(angle);
+        const endY = y + len * Math.sin(angle);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+
+        const newLen = len * 0.75;
+        drawBranch(endX, endY, newLen, angle - fractalParams.angle, depth - 1);
+        drawBranch(endX, endY, newLen, angle + fractalParams.angle, depth - 1);
+    }
+
+    let frameCount = 0;
+
+    function animateFractal() {
+        requestAnimationFrame(animateFractal);
+
+        if (!isSectionVisible) return;
+
+        // Lerp de parámetros para suavidad
+        const targetConfig = fractalConfigs[currentIndex];
+        const lerpFactor = 0.02;
+        fractalParams.angle += (targetConfig.angle - fractalParams.angle) * lerpFactor;
+        fractalParams.depth += (targetConfig.depth - fractalParams.depth) * lerpFactor;
+        
+        let hueDiff = targetConfig.hue - fractalParams.hue;
+        if (hueDiff > 180) hueDiff -= 360;
+        if (hueDiff < -180) hueDiff += 360;
+        fractalParams.hue = (fractalParams.hue + hueDiff * lerpFactor + 360) % 360;
+
+        ctx.fillStyle = 'rgba(5, 5, 5, 0.1)';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.strokeStyle = `hsla(${fractalParams.hue}, 100%, 50%, 0.07)`;
+        ctx.lineWidth = 0.5;
+
+        const time = frameCount * 0.005;
+        drawBranch(width / 2 + Math.cos(time) * (width / 4), height, height / 7, -Math.PI / 2 + Math.sin(time * 0.7) * 0.2, Math.round(fractalParams.depth));
+        drawBranch(width / 2 - Math.cos(time * 1.2) * (width / 4), 0, height / 7, Math.PI / 2 - Math.sin(time * 0.8) * 0.2, Math.round(fractalParams.depth));
+
+        frameCount++;
+    }
+
+    animateFractal();
 }

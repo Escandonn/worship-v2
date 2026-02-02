@@ -63,13 +63,23 @@ function initCarousel(container) {
     const particles = [];
     const particleGeometry = new THREE.BufferGeometry();
     const particlePositions = new Float32Array(particleCount * 3);
+    const particleColors = new Float32Array(particleCount * 3); // NUEVO: Para colores por partícula
     const pMaterial = new THREE.PointsMaterial({
-        color: 0xcccccc, // Color gris/blanco para que combine
-        size: 0.5,
+        vertexColors: true,
+        size: 1.5, // Aumentamos el tamaño para mayor visibilidad
         blending: THREE.AdditiveBlending,
         transparent: true,
         depthTest: false, // CORRECCIÓN: Asegura que las partículas se vean sobre otros objetos
     });
+
+    // Paleta de colores vibrantes para las chispas
+    const sparkColors = [
+        new THREE.Color(0xff44ff), // Magenta brillante
+        new THREE.Color(0x44ffff), // Cyan brillante
+        new THREE.Color(0xffff44), // Amarillo brillante
+        new THREE.Color(0xff8800), // Naranja
+        new THREE.Color(0x44ff88)  // Verde neón
+    ];
 
     for (let i = 0; i < particleCount; i++) {
         particles.push({
@@ -78,26 +88,38 @@ function initCarousel(container) {
             life: 0,
         });
         particlePositions[i * 3 + 1] = 9999; // Posición Y inicial fuera de la vista
+        // Color inicial (no importa mucho ya que son invisibles)
+        particleColors[i * 3] = 1;
+        particleColors[i * 3 + 1] = 1;
+        particleColors[i * 3 + 2] = 1;
     }
     particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3)); // AÑADIR ATRIBUTO DE COLOR
     const particleSystem = new THREE.Points(particleGeometry, pMaterial);
     scene.add(particleSystem);
 
     let nextParticle = 0;
     function spawnParticles(origin) {
-        const count = 25; // Cantidad de partículas por impacto
+        const count = 40; // Aumentamos la cantidad de partículas por impacto
         for (let i = 0; i < count; i++) {
             const p = particles[nextParticle];
             p.life = 1.0;
             p.position.copy(origin);
             
             const angle = Math.random() * Math.PI * 2;
-            const speed = 0.05 + Math.random() * 0.15;
+            const speed = 0.1 + Math.random() * 0.2; // Un poco más de velocidad
             p.velocity.set(Math.cos(angle) * speed, Math.sin(angle) * speed, (Math.random() - 0.5) * 0.1);
-            p.velocity.y += 0.05; // Un ligero impulso hacia arriba inicial
+            p.velocity.y += 0.1; // Mayor impulso hacia arriba inicial
+
+            // Asignar un color vibrante aleatorio a la partícula
+            const sparkColor = sparkColors[Math.floor(Math.random() * sparkColors.length)];
+            particleColors[(nextParticle * 3)] = sparkColor.r;
+            particleColors[(nextParticle * 3) + 1] = sparkColor.g;
+            particleColors[(nextParticle * 3) + 2] = sparkColor.b;
 
             nextParticle = (nextParticle + 1) % particleCount;
         }
+        particleGeometry.attributes.color.needsUpdate = true; // Marcar para actualizar
     }
 
     // 5. Crear los Carruseles (Dos Ruedas)
@@ -197,11 +219,16 @@ function initCarousel(container) {
             phraseGroup.add(textMesh);
             phraseGroup.add(cardMesh);
             
+            // OPTIMIZACIÓN: Orientar hacia la cámara solo una vez, ya que la cámara es estática.
+            // Esto ahorra muchos cálculos en el bucle de animación.
+            phraseGroup.lookAt(camera.position);
+
             const baseSpeed = 0.06;
             const speedBonus = text.length > 25 ? 0.03 : 0;
             phraseGroup.userData = { 
                 index: i,
-                speed: baseSpeed + speedBonus,
+                baseSpeed: baseSpeed + speedBonus, // Guardar velocidad base
+                speed: baseSpeed + speedBonus, // Velocidad actual
                 hasSpawned: false
             };
 
@@ -237,11 +264,15 @@ function initCarousel(container) {
             if (isMobile) {
                 group.scale.set(0.4, 0.4, 0.4); // Letras más pequeñas en móvil
                 group.position.x = 0;           // Una sola columna central
+                // Acelerar en móvil
+                if (group.userData.baseSpeed) group.userData.speed = group.userData.baseSpeed * 1.4;
             } else {
                 group.scale.set(0.8, 0.8, 0.8);       // Letras más pequeñas en PC
                 // 2 Columnas alternadas: Izquierda (-12) y Derecha (12)
                 const isRight = group.userData.index % 2 !== 0;
                 group.position.x = isRight ? 12 : -12;
+                // Velocidad normal en PC
+                if (group.userData.baseSpeed) group.userData.speed = group.userData.baseSpeed;
             }
         });
     }
@@ -259,6 +290,8 @@ function initCarousel(container) {
     // 7. Animación
     const animate = () => {
         requestAnimationFrame(animate);
+
+        const isMobile = container.clientWidth < 768;
 
         if (!isVisible) return; // PAUSA INTELIGENTE: No gastar recursos si no se ve
         
@@ -323,15 +356,12 @@ function initCarousel(container) {
                 // Spawn de partículas solo una vez
                 if (!group.userData.hasSpawned) {
                     const spawnPosition = new THREE.Vector3(group.position.x, 0, 0);
-                    spawnParticles(spawnPosition);
+                    spawnParticles(spawnPosition); // Genera chispas de colores
                     group.userData.hasSpawned = true;
                 }
                 // Reiniciar arriba manteniendo el espaciado exacto
                 group.position.y = phrases.length * spacing;
             }
-            
-            // Orientar hacia la cámara para legibilidad perfecta
-            group.lookAt(camera.position);
         });
 
         composer.render();
