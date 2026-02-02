@@ -804,3 +804,27 @@ if (chatbotHeader && chatbotContainer) {
         }
     });
 }
+
+// ==========================================
+// NAVEGACIÓN SUAVE (SCROLL)
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const navLinks = {
+        '.nav-item.inicio': 'hero-container',
+        '.nav-item.sobre': 'section2',
+        '.nav-item.acerca': 'section-3'
+    };
+
+    Object.entries(navLinks).forEach(([selector, targetId]) => {
+        const link = document.querySelector(selector);
+        if (link) {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = document.getElementById(targetId);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        }
+    });
+});
