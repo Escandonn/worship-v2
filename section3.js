@@ -129,15 +129,30 @@ function initCarousel(container) {
     scene.add(ringRight);
 
     const itemCount = 60; 
-    const radius = 12;
+    const radius = 12; // Radio de los anillos
     // Paleta de colores opacos en escala de grises
     const colors = [0x333333, 0x555555, 0x777777, 0x999999, 0xbbbbbb, 0xdddddd];
     const geometry = new THREE.BoxGeometry(0.1, 0.1, 1); 
 
+    /**
+     * Elimina acentos y la letra 'ñ' de una cadena de texto.
+     * @param {string} str La cadena de texto a procesar.
+     * @returns {string} La cadena de texto sin acentos ni 'ñ'.
+     */
+    function removeAccentsAndN(str) {
+        return str
+            .normalize("NFD") // Descompone caracteres acentuados en su base y el acento
+            .replace(/[\u0300-\u036f]/g, "") // Elimina los caracteres de acento
+            .replace(/ñ/g, "n") // Reemplaza 'ñ' por 'n'
+            .replace(/Ñ/g, "N"); // Reemplaza 'Ñ' por 'N'
+    }
+
     function populateRing(group) {
         for (let i = 0; i < itemCount; i++) {
             const color = colors[i % colors.length];
-            // Material más opaco, menos brillante
+            // Material más opaco, menos brillante.
+            // Se usa MeshStandardMaterial para que reaccione a la luz y al bloom.
+            // El emissive le da un brillo propio que se realza con el bloom.
             const material = new THREE.MeshStandardMaterial({ 
                 color: color,
                 emissive: 0x111111, // Brillo sutil
@@ -167,12 +182,14 @@ function initCarousel(container) {
     // 6. Textos Cayendo (Frases Contextuales)
     const fallingTexts = [];
     const phrases = [
-        "ARQUITECTURA DE SOFTWARE", "SOLUCIONES CLOUD-NATIVE", "OPTIMIZACION DE RENDIMIENTO", "CONSULTORIA ESTRATEGICA", "WORSHIP ENTERPRISE",
-        "DISEÑO DE EXPERIENCIA (UX)", "TRANSFORMACION DIGITAL", "CODIGO ESCALABLE", "ANALISIS DE DATOS", "SEO TECNICO AVANZADO",
-        "INTEGRACION DE API RESTFUL", "SEGURIDAD WEB (OWASP)", "METODOLOGIAS AGILE", "SOPORTE DEDICADO", "INNOVACION DISRUPTIVA",
+        "ARQUITECTURA DE SOFTWARE", "SOLUCIONES CLOUD-NATIVE", "OPTIMIZACION DE RENDIMIENTO", "CONSULTORIA ESTRATEGICA", "WORSHIP ENTERPRISE", // ó, é
+        "DISENO DE EXPERIENCIA (UX)", "TRANSFORMACION DIGITAL", "CODIGO ESCALABLE", "ANALISIS DE DATOS", "SEO TECNICO AVANZADO", // ñ, ó, ó, í
+        "INTEGRACION DE API RESTFUL", "SEGURIDAD WEB (OWASP)", "METODOLOGIAS AGILE", "SOPORTE DEDICADO", "INNOVACION DISRUPTIVA", // ó, í, ó
         "INTELIGENCIA ARTIFICIAL", "VISUALIZACION 3D", "BRANDING CORPORATIVO", "OPTIMIZACION DE CONVERSION", "IDENTIDAD DIGITAL"
     ];
 
+    // Aplicar la función a todas las frases
+    const processedPhrases = phrases.map(phrase => removeAccentsAndN(phrase));
     const spacing = 35; // Espaciado vertical amplio para que caigan una a una
 
     const loader = new FontLoader();
@@ -190,7 +207,7 @@ function initCarousel(container) {
                 return;
             }
 
-            const text = phrases[i];
+            const text = processedPhrases[i]; // Usar las frases procesadas
             const phraseGroup = new THREE.Group();
 
             const textGeo = new TextGeometry(text, {
@@ -200,8 +217,12 @@ function initCarousel(container) {
             });
             textGeo.center();
 
+            // Lógica para alternar la dirección y el color
+            const isFromTop = i % 2 === 0;
+            const textColor = isFromTop ? 0xffffff : 0x00ffff; // Blanco para arriba, Cyan para abajo
+
             const textMat = new THREE.MeshStandardMaterial({
-                color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.5,
+                color: textColor, emissive: textColor, emissiveIntensity: 0.5,
                 roughness: 0.4, metalness: 0.8
             });
 
@@ -210,8 +231,12 @@ function initCarousel(container) {
             const cardWidth = text.length * 0.9;
             const cardHeight = 3.5;
             const cardGeo = new THREE.PlaneGeometry(cardWidth, cardHeight);
+
+            // La tarjeta también cambia de color para mayor coherencia visual
+            const cardColor = isFromTop ? 0x101010 : 0x001010; // Negro para arriba, Cian oscuro para abajo
+
             const cardMat = new THREE.MeshBasicMaterial({
-                color: 0x101010, transparent: true, opacity: 0.8, side: THREE.DoubleSide
+                color: cardColor, transparent: true, opacity: 0.8, side: THREE.DoubleSide
             });
             const cardMesh = new THREE.Mesh(cardGeo, cardMat);
             cardMesh.position.z = -0.5;
@@ -223,16 +248,22 @@ function initCarousel(container) {
             // Esto ahorra muchos cálculos en el bucle de animación.
             phraseGroup.lookAt(camera.position);
 
+            // Determinar dirección y posición
+            const direction = isFromTop ? -1 : 1; // -1 para bajar, 1 para subir
+            const groupIndex = Math.floor(i / 2); // Índice dentro de su grupo (arriba o abajo)
+
             const baseSpeed = 0.09;
             const speedBonus = text.length > 25 ? 0.09 : 0; // Aumentar ligeramente el bonus para textos largos
             phraseGroup.userData = { 
                 index: i,
                 baseSpeed: baseSpeed + speedBonus, // Guardar velocidad base
                 speed: baseSpeed + speedBonus, // Velocidad actual
-                hasSpawned: false
+                hasSpawned: false,
+                direction: direction // Guardar la dirección del movimiento
             };
 
-            phraseGroup.position.y = 25 + (i * spacing); 
+            // Posición inicial basada en si viene de arriba o abajo
+            phraseGroup.position.y = (isFromTop ? 1 : -1) * (25 + (groupIndex * spacing));
             scene.add(phraseGroup);
             fallingTexts.push(phraseGroup);
 
@@ -329,15 +360,19 @@ function initCarousel(container) {
 
         // Animar Textos
         fallingTexts.forEach(group => {
-            group.position.y -= group.userData.speed; // Bajando con velocidad variable
+            // Mover hacia arriba o abajo según la dirección guardada
+            group.position.y += group.userData.speed * group.userData.direction;
 
             const textMesh = group.children[0];
             const cardMesh = group.children[1];
 
-            // Efecto de desaparecer al llegar al círculo (y=0)
-            if (group.position.y < 10) {
+            // Efecto de desaparecer al acercarse al centro (y=0)
+            const approachZone = 10;
+            const distanceToCenter = Math.abs(group.position.y);
+
+            if (distanceToCenter < approachZone) {
                 // Fade out (Transparencia progresiva hasta 0)
-                const opacity = Math.max(0, group.position.y / 10);
+                const opacity = Math.max(0, distanceToCenter / approachZone);
                 textMesh.material.transparent = true;
                 textMesh.material.opacity = opacity;
                 cardMesh.material.opacity = opacity * 0.8; // La tarjeta se desvanece con el texto
@@ -348,19 +383,32 @@ function initCarousel(container) {
                 textMesh.material.opacity = 1;
                 cardMesh.material.opacity = 0.8;
                 textMesh.material.emissiveIntensity = 0.5;
-                group.userData.hasSpawned = false; // Resetear flag cuando está arriba
+                group.userData.hasSpawned = false; // Resetear flag cuando está lejos del centro
             }
 
-            // Reset inmediato al tocar el centro (y=0)
-            if (group.position.y <= 0) {
-                // Spawn de partículas solo una vez
+            // Reset al cruzar el centro (y=0)
+            const isFromTop = group.userData.direction === -1;
+            const hasCrossedCenter = (isFromTop && group.position.y <= 0) || (!isFromTop && group.position.y >= 0);
+
+            if (hasCrossedCenter) {
+                // Spawn de partículas solo una vez por cruce
                 if (!group.userData.hasSpawned) {
                     const spawnPosition = new THREE.Vector3(group.position.x, 0, 0);
                     spawnParticles(spawnPosition); // Genera chispas de colores
                     group.userData.hasSpawned = true;
                 }
-                // Reiniciar arriba manteniendo el espaciado exacto
-                group.position.y = phrases.length * spacing;
+
+                // Reiniciar en su propio "carril" (arriba o abajo)
+                const totalTopPhrases = Math.ceil(phrases.length / 2);
+                const totalBottomPhrases = Math.floor(phrases.length / 2);
+                
+                if (isFromTop) {
+                    // Si venía de arriba, se reinicia al final de la cola de arriba
+                    group.position.y = totalTopPhrases * spacing;
+                } else {
+                    // Si venía de abajo, se reinicia al final de la cola de abajo
+                    group.position.y = - (totalBottomPhrases * spacing);
+                }
             }
         });
 
