@@ -49,78 +49,14 @@ function initCarousel(container) {
     // Post-processing (Bloom)
     const renderScene = new RenderPass(scene, camera);
     
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 1.5, 0.4, 0.85);
-    bloomPass.threshold = 0; // Brillar todo lo que tenga luz
-    bloomPass.strength = 2.0; // Intensidad del láser
-    bloomPass.radius = 0.5;   // Dispersión del brillo
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 1.2, 0.3, 0.85);
+    bloomPass.threshold = 0.1;
+    bloomPass.strength = 1.5;
+    bloomPass.radius = 0.3;
 
     const composer = new EffectComposer(renderer);
     composer.addPass(renderScene);
     composer.addPass(bloomPass);
-
-    // Particle System for impact effect
-    const particleCount = 500;
-    const particles = [];
-    const particleGeometry = new THREE.BufferGeometry();
-    const particlePositions = new Float32Array(particleCount * 3);
-    const particleColors = new Float32Array(particleCount * 3); // NUEVO: Para colores por partícula
-    const pMaterial = new THREE.PointsMaterial({
-        vertexColors: true,
-        size: 1.5, // Aumentamos el tamaño para mayor visibilidad
-        blending: THREE.AdditiveBlending,
-        transparent: true,
-        depthTest: false, // CORRECCIÓN: Asegura que las partículas se vean sobre otros objetos
-    });
-
-    // Paleta de colores vibrantes para las chispas
-    const sparkColors = [
-        new THREE.Color(0xff44ff), // Magenta brillante
-        new THREE.Color(0x44ffff), // Cyan brillante
-        new THREE.Color(0xffff44), // Amarillo brillante
-        new THREE.Color(0xff8800), // Naranja
-        new THREE.Color(0x44ff88)  // Verde neón
-    ];
-
-    for (let i = 0; i < particleCount; i++) {
-        particles.push({
-            position: new THREE.Vector3(),
-            velocity: new THREE.Vector3(),
-            life: 0,
-        });
-        particlePositions[i * 3 + 1] = 9999; // Posición Y inicial fuera de la vista
-        // Color inicial (no importa mucho ya que son invisibles)
-        particleColors[i * 3] = 1;
-        particleColors[i * 3 + 1] = 1;
-        particleColors[i * 3 + 2] = 1;
-    }
-    particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-    particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3)); // AÑADIR ATRIBUTO DE COLOR
-    const particleSystem = new THREE.Points(particleGeometry, pMaterial);
-    scene.add(particleSystem);
-
-    let nextParticle = 0;
-    function spawnParticles(origin) {
-        const count = 40; // Aumentamos la cantidad de partículas por impacto
-        for (let i = 0; i < count; i++) {
-            const p = particles[nextParticle];
-            p.life = 1.0;
-            p.position.copy(origin);
-            
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 0.1 + Math.random() * 0.2; // Un poco más de velocidad
-            p.velocity.set(Math.cos(angle) * speed, Math.sin(angle) * speed, (Math.random() - 0.5) * 0.1);
-            p.velocity.y += 0.1; // Mayor impulso hacia arriba inicial
-
-            // Asignar un color vibrante aleatorio a la partícula
-            const sparkColor = sparkColors[Math.floor(Math.random() * sparkColors.length)];
-            particleColors[(nextParticle * 3)] = sparkColor.r;
-            particleColors[(nextParticle * 3) + 1] = sparkColor.g;
-            particleColors[(nextParticle * 3) + 2] = sparkColor.b;
-
-            nextParticle = (nextParticle + 1) % particleCount;
-        }
-        particleGeometry.attributes.color.needsUpdate = true; // Marcar para actualizar
-    }
 
     // 5. Crear los Carruseles (Dos Ruedas)
     const ringLeft = new THREE.Group();
@@ -128,52 +64,49 @@ function initCarousel(container) {
     scene.add(ringLeft);
     scene.add(ringRight);
 
-    const itemCount = 60; 
+    const itemCount = 30; // Reducido de 60 para mejor rendimiento
     const radius = 12; // Radio de los anillos
     // Paleta de colores opacos en escala de grises
     const colors = [0x333333, 0x555555, 0x777777, 0x999999, 0xbbbbbb, 0xdddddd];
-    const geometry = new THREE.BoxGeometry(0.1, 0.1, 1); 
+    const geometry = new THREE.BoxGeometry(0.1, 0.1, 1);
 
-    /**
-     * Elimina acentos y la letra 'ñ' de una cadena de texto.
-     * @param {string} str La cadena de texto a procesar.
-     * @returns {string} La cadena de texto sin acentos ni 'ñ'.
-     */
-    function removeAccentsAndN(str) {
-        return str
-            .normalize("NFD") // Descompone caracteres acentuados en su base y el acento
-            .replace(/[\u0300-\u036f]/g, "") // Elimina los caracteres de acento
-            .replace(/ñ/g, "n") // Reemplaza 'ñ' por 'n'
-            .replace(/Ñ/g, "N"); // Reemplaza 'Ñ' por 'N'
-    }
+    // Material compartido para todas las instancias
+    const material = new THREE.MeshStandardMaterial({ 
+        color: 0x666666,
+        emissive: 0x111111,
+        emissiveIntensity: 1,
+        roughness: 0.8,
+        metalness: 0.2
+    });
 
     function populateRing(group) {
-        for (let i = 0; i < itemCount; i++) {
-            const color = colors[i % colors.length];
-            // Material más opaco, menos brillante.
-            // Se usa MeshStandardMaterial para que reaccione a la luz y al bloom.
-            // El emissive le da un brillo propio que se realza con el bloom.
-            const material = new THREE.MeshStandardMaterial({ 
-                color: color,
-                emissive: 0x111111, // Brillo sutil
-                emissiveIntensity: 1,
-                roughness: 0.8, // Más rugoso, menos reflejo
-                metalness: 0.2
-            });
+        // Usar InstancedMesh para mejor rendimiento
+        const instancedMesh = new THREE.InstancedMesh(geometry, material, itemCount);
+        
+        const dummy = new THREE.Object3D();
+        const color = new THREE.Color();
 
-            const mesh = new THREE.Mesh(geometry, material);
+        for (let i = 0; i < itemCount; i++) {
+            const colorVal = colors[i % colors.length];
+            color.setHex(colorVal);
+
             const length = 5 + Math.random() * 10;
-            mesh.scale.z = length;
+            dummy.scale.z = length;
 
             const angle = (i / itemCount) * Math.PI * 2;
             const r = radius + (Math.random() - 0.5) * 3;
             
-            mesh.position.x = Math.cos(angle) * r;
-            mesh.position.z = Math.sin(angle) * r;
-            mesh.rotation.y = -angle; 
+            dummy.position.x = Math.cos(angle) * r;
+            dummy.position.z = Math.sin(angle) * r;
+            dummy.rotation.y = -angle;
 
-            group.add(mesh);
+            dummy.updateMatrix();
+            instancedMesh.setMatrixAt(i, dummy.matrix);
+            instancedMesh.setColorAt(i, color);
         }
+
+        instancedMesh.instanceColor.needsUpdate = true;
+        group.add(instancedMesh);
     }
 
     populateRing(ringLeft);
@@ -182,15 +115,21 @@ function initCarousel(container) {
     // 6. Textos Cayendo (Frases Contextuales)
     const fallingTexts = [];
     const phrases = [
-        "ARQUITECTURA DE SOFTWARE", "SOLUCIONES CLOUD-NATIVE", "OPTIMIZACION DE RENDIMIENTO", "CONSULTORIA ESTRATEGICA", "WORSHIP ENTERPRISE", // ó, é
-        "DISENO DE EXPERIENCIA (UX)", "TRANSFORMACION DIGITAL", "CODIGO ESCALABLE", "ANALISIS DE DATOS", "SEO TECNICO AVANZADO", // ñ, ó, ó, í
-        "INTEGRACION DE API RESTFUL", "SEGURIDAD WEB (OWASP)", "METODOLOGIAS AGILE", "SOPORTE DEDICADO", "INNOVACION DISRUPTIVA", // ó, í, ó
-        "INTELIGENCIA ARTIFICIAL", "VISUALIZACION 3D", "BRANDING CORPORATIVO", "OPTIMIZACION DE CONVERSION", "IDENTIDAD DIGITAL"
+        "ARQUITECTURA DE SOFTWARE", "SOLUCIONES CLOUD-NATIVE", "OPTIMIZACION DE RENDIMIENTO", "CONSULTORIA ESTRATEGICA", "WORSHIP ENTERPRISE",
+        "DISENO DE EXPERIENCIA", "TRANSFORMACION DIGITAL", "CODIGO ESCALABLE", "ANALISIS DE DATOS", "SEO TECNICO AVANZADO"
     ];
 
-    // Aplicar la función a todas las frases
+    // Helper: Eliminar acentos y la letra 'ñ'
+    function removeAccentsAndN(str) {
+        return str
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/ñ/g, "n")
+            .replace(/Ñ/g, "N");
+    }
+
     const processedPhrases = phrases.map(phrase => removeAccentsAndN(phrase));
-    const spacing = 35; // Espaciado vertical amplio para que caigan una a una
+    const spacing = 35;
 
     const loader = new FontLoader();
     loader.load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json', (font) => {
@@ -211,9 +150,8 @@ function initCarousel(container) {
             const phraseGroup = new THREE.Group();
 
             const textGeo = new TextGeometry(text, {
-                font: font, size: 2.0, height: 0.2, curveSegments: 12,
-                bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.02,
-                bevelOffset: 0, bevelSegments: 5
+                font: font, size: 2.0, height: 0.2, curveSegments: 8,
+                bevelEnabled: false
             });
             textGeo.center();
 
@@ -339,25 +277,6 @@ function initCarousel(container) {
         ringRight.rotation.z = Math.sin(time * 0.002 + 1) * 0.15;
         ringRight.rotation.x = Math.cos(time * 0.001 + 1) * 0.1;
 
-        // Animar Partículas
-        for (let i = 0; i < particleCount; i++) {
-            const p = particles[i];
-            if (p.life > 0) {
-                p.position.add(p.velocity);
-                p.velocity.y -= 0.003; // Gravedad
-                p.life -= 0.015;
-
-                if (p.life <= 0) {
-                    particlePositions[i * 3 + 1] = 9999; // Mover fuera de la vista
-                } else {
-                    particlePositions[i * 3] = p.position.x;
-                    particlePositions[i * 3 + 1] = p.position.y;
-                    particlePositions[i * 3 + 2] = p.position.z;
-                }
-            }
-        }
-        particleGeometry.attributes.position.needsUpdate = true;
-
         // Animar Textos
         fallingTexts.forEach(group => {
             // Mover hacia arriba o abajo según la dirección guardada
@@ -391,13 +310,6 @@ function initCarousel(container) {
             const hasCrossedCenter = (isFromTop && group.position.y <= 0) || (!isFromTop && group.position.y >= 0);
 
             if (hasCrossedCenter) {
-                // Spawn de partículas solo una vez por cruce
-                if (!group.userData.hasSpawned) {
-                    const spawnPosition = new THREE.Vector3(group.position.x, 0, 0);
-                    spawnParticles(spawnPosition); // Genera chispas de colores
-                    group.userData.hasSpawned = true;
-                }
-
                 // Reiniciar en su propio "carril" (arriba o abajo)
                 const totalTopPhrases = Math.ceil(phrases.length / 2);
                 const totalBottomPhrases = Math.floor(phrases.length / 2);
