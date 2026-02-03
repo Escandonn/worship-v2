@@ -1,38 +1,34 @@
-const form = document.querySelector('.modern-form');
+window.addEventListener('load', () => {
+  const form = document.querySelector('.modern-form');
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+  if (!form) return;
 
-  const nombre = document.getElementById('nombre').value.trim();
-  const apellido = document.getElementById('apellido').value.trim();
-  const email = document.getElementById('email').value.trim();
-  const numero = document.getElementById('numero').value.trim();
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  if (!nombre || !apellido || !email || !numero) {
-    alert('Por favor completa todos los campos');
-    return;
-  }
+    const nombre = document.getElementById('nombre').value.trim();
+    const apellido = document.getElementById('apellido').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const numero = document.getElementById('numero').value.trim();
 
-  try {
-    const response = await fetch('/api/mensajes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ nombre, apellido, email, numero })
-    });
+    try {
+      const res = await fetch('/api/mensajes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, apellido, email, numero })
+      });
 
-    const result = await response.json();
+      const data = await res.json();
 
-    if (response.ok) {
-      alert('Datos enviados correctamente');
-      form.reset();
-    } else {
-      alert('Error: ' + result.error);
+      if (res.ok) {
+        alert('Datos enviados');
+        form.reset();
+      } else {
+        alert(data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión');
     }
-
-  } catch (error) {
-    console.error(error);
-    alert('Error de conexión con el servidor');
-  }
+  });
 });
