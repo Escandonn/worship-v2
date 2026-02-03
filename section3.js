@@ -39,20 +39,20 @@ function initCarousel(container) {
     container.appendChild(renderer.domElement);
 
     // 4. Iluminación para resaltar los colores brillantes
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-    pointLight.position.set(0, 20, 0);
+    const pointLight = new THREE.PointLight(0xffffff, 2, 150);
+    pointLight.position.set(0, 30, 0);
     scene.add(pointLight);
 
     // Post-processing (Bloom)
     const renderScene = new RenderPass(scene, camera);
     
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 1.2, 0.3, 0.85);
-    bloomPass.threshold = 0.1;
-    bloomPass.strength = 1.5;
-    bloomPass.radius = 0.3;
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 1.8, 0.5, 0.85);
+    bloomPass.threshold = 0.05;
+    bloomPass.strength = 2.5;
+    bloomPass.radius = 0.8;
 
     const composer = new EffectComposer(renderer);
     composer.addPass(renderScene);
@@ -72,11 +72,11 @@ function initCarousel(container) {
 
     // Material compartido para todas las instancias
     const material = new THREE.MeshStandardMaterial({ 
-        color: 0x666666,
-        emissive: 0x111111,
-        emissiveIntensity: 1,
-        roughness: 0.8,
-        metalness: 0.2
+        color: 0x888888,
+        emissive: 0x555555,
+        emissiveIntensity: 2,
+        roughness: 0.6,
+        metalness: 0.4
     });
 
     function populateRing(group) {
