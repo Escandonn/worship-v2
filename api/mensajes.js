@@ -1,27 +1,35 @@
-import { createClient } from '@supabase/supabase-js'
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('.modern-form');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-)
+  if (!form) return;
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método no permitido' })
-  }
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  try {
-    const { nombre, apellido, email, numero } = req.body
+    const nombre = document.getElementById('nombre').value.trim();
+    const apellido = document.getElementById('apellido').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const numero = document.getElementById('numero').value.trim();
 
-    const { error } = await supabase
-      .from('mensajes')
-      .insert([{ nombre, apellido, email, numero }])
+    try {
+      const response = await fetch('/api/mensajes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, apellido, email, numero })
+      });
 
-    if (error) throw error
+      const data = await response.json();
 
-    return res.status(200).json({ ok: true })
+      if (response.ok) {
+        alert('Datos enviados correctamente');
+        form.reset();
+      } else {
+        alert(data.error);
+      }
 
-  } catch (err) {
-    return res.status(500).json({ error: err.message })
-  }
-}
+    } catch (err) {
+      alert('Error de conexión');
+      console.error(err);
+    }
+  });
+});
