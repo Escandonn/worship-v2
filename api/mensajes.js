@@ -1,35 +1,31 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('.modern-form');
+import { createClient } from '@supabase/supabase-js';
 
-  if (!form) return;
+export default async function handler(req, res) {
+  // Solo permitir peticiones POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  const { nombre, apellido, email, numero } = req.body;
 
-    const nombre = document.getElementById('nombre').value.trim();
-    const apellido = document.getElementById('apellido').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const numero = document.getElementById('numero').value.trim();
+  // Configuración de Supabase
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    try {
-      const response = await fetch('/api/mensajes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, apellido, email, numero })
-      });
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(500).json({ error: 'Error de configuración: Faltan credenciales de Supabase' });
+  }
 
-      const data = await response.json();
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
-      if (response.ok) {
-        alert('Datos enviados correctamente');
-        form.reset();
-      } else {
-        alert(data.error);
-      }
+  const { error } = await supabase
+    .from('mensajes')
+    .insert([{ nombre, apellido, email, numero }]);
 
-    } catch (err) {
-      alert('Error de conexión');
-      console.error(err);
-    }
-  });
-});
+  if (error) {
+    console.error('Error Supabase:', error);
+    return res.status(500).json({ error: 'Error al guardar el mensaje' });
+  }
+
+  return res.status(200).json({ message: 'Mensaje guardado correctamente' });
+}

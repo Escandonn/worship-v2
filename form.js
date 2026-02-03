@@ -1,47 +1,35 @@
-(function () {
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('.modern-form');
 
-  function initForm() {
-    const form = document.querySelector('.modern-form');
-    if (!form) return;
+  // Si el formulario no existe en esta página, salimos para evitar errores
+  if (!form) return;
 
-    form.addEventListener('submit', async function (e) {
-      e.preventDefault();
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-      const nombre = document.getElementById('nombre').value.trim();
-      const apellido = document.getElementById('apellido').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const numero = document.getElementById('numero').value.trim();
+    const nombre = document.getElementById('nombre').value.trim();
+    const apellido = document.getElementById('apellido').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const numero = document.getElementById('numero').value.trim();
 
-      try {
-        const res = await fetch('/api/mensajes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nombre, apellido, email, numero })
-        });
+    try {
+      const response = await fetch('/api/mensajes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, apellido, email, numero })
+      });
 
-        const data = await res.json();
+      const data = await response.json();
 
-        if (res.ok) {
-          alert('Datos enviados correctamente');
-          form.reset();
-        } else {
-          alert(data.error);
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Error de conexión');
+      if (response.ok) {
+        alert('Datos enviados correctamente');
+        form.reset();
+      } else {
+        alert(data.error || 'Error al enviar los datos');
       }
-    });
-  }
-
-  // Observa el DOM hasta que aparezca el formulario
-  const observer = new MutationObserver(() => {
-    if (document.querySelector('.modern-form')) {
-      initForm();
-      observer.disconnect();
+    } catch (err) {
+      alert('Error de conexión');
+      console.error(err);
     }
   });
-
-  observer.observe(document.body, { childList: true, subtree: true });
-
-})();
+});
