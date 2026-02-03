@@ -77,6 +77,7 @@
             <a href="#" class="nav-item inicio">Inicio</a>
             <a href="#" class="nav-item sobre">Sobre Nosotros</a>
             <a href="#" class="nav-item acerca">Acerca de</a>
+            <a href="#" class="nav-item contacto">Contacto</a>
         </div>
     </nav>
 
@@ -126,6 +127,38 @@
     <!-- Sección 3: Carrusel 3D (Manejado por section3.js) -->
     <section id="section-3" style="position: relative; height: 100vh; width: 100%; background: #050505; overflow: hidden;">
         <!-- El canvas del carrusel se inyectará aquí -->
+    </section>
+
+    <!-- Sección Contacto -->
+    <section id="section-contact">
+        <div class="contact-content">
+            <h2 class="section-title">INICIAR PROTOCOLO</h2>
+            <form class="modern-form">
+                <div class="form-row">
+                    <div class="input-group">
+                        <input type="text" id="nombre" required placeholder=" ">
+                        <label for="nombre">Nombre</label>
+                        <div class="line"></div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="apellido" required placeholder=" ">
+                        <label for="apellido">Apellido</label>
+                        <div class="line"></div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input type="email" id="email" required placeholder=" ">
+                    <label for="email">Correo Electrónico</label>
+                    <div class="line"></div>
+                </div>
+                <div class="input-group">
+                    <input type="tel" id="numero" required placeholder=" ">
+                    <label for="numero">Número de Contacto</label>
+                    <div class="line"></div>
+                </div>
+                <button type="submit" class="submit-btn">ENVIAR DATOS</button>
+            </form>
+        </div>
     </section>
 
     <!-- Sección 4: Matrix Footer (Manejado por section4.js) -->

@@ -12,6 +12,7 @@
     --color-desarrollo: #ffffff;
     --color-marketing: #e0e0e0;
     --color-soporte: #cccccc;
+    --color-contacto: #00ff88;
 }
 
 * { box-sizing: border-box; }
@@ -155,6 +156,7 @@ nav {
 .nav-item.inicio { text-shadow: 0 0 10px var(--color-inicio); }
 .nav-item.sobre { text-shadow: 0 0 10px var(--color-sobre); }
 .nav-item.acerca { text-shadow: 0 0 10px var(--color-acerca); }
+.nav-item.contacto { text-shadow: 0 0 10px var(--color-contacto); }
 
 .nav-item:hover {
     transform: translateY(-5px) scale(1.1);
@@ -278,6 +280,105 @@ nav {
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
     z-index: 10;
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+/* --- SECCIÓN CONTACTO --- */
+#section-contact {
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    background: #020202;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow: hidden;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.contact-content {
+    width: 100%;
+    max-width: 700px;
+    z-index: 10;
+}
+
+.section-title {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    text-align: center;
+    margin-bottom: 4rem;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+}
+
+.modern-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 2rem;
+}
+
+@media (max-width: 600px) {
+    .form-row { flex-direction: column; gap: 2.5rem; }
+}
+
+.input-group { position: relative; width: 100%; }
+
+.input-group input {
+    width: 100%;
+    padding: 10px 0;
+    font-size: 1rem;
+    color: #fff;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #333;
+    outline: none;
+    font-family: inherit;
+}
+
+.input-group label {
+    position: absolute;
+    top: 10px; left: 0;
+    font-size: 1rem; color: #666;
+    pointer-events: none;
+    transition: 0.3s ease all;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+
+.input-group input:focus ~ label,
+.input-group input:not(:placeholder-shown) ~ label {
+    top: -20px; font-size: 0.75rem; color: var(--accent);
+}
+
+.input-group .line {
+    position: absolute; bottom: 0; left: 0;
+    width: 0; height: 1px;
+    background: var(--accent);
+    transition: 0.3s ease all;
+    box-shadow: 0 0 10px var(--accent);
+}
+
+.input-group input:focus ~ .line { width: 100%; }
+
+.submit-btn {
+    margin-top: 2rem; padding: 1.2rem;
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 1rem; font-weight: bold;
+    text-transform: uppercase; letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+    background: var(--accent); color: #000;
+    box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
 }
 
 /* --- CHATBOT ASESOR VIRTUAL RISP --- */

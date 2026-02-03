@@ -842,7 +842,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = {
         '.nav-item.inicio': 'hero-container',
         '.nav-item.sobre': 'section2',
-        '.nav-item.acerca': 'section-3'
+        '.nav-item.acerca': 'section-3',
+        '.nav-item.contacto': 'section-contact'
     };
 
     Object.entries(navLinks).forEach(([selector, targetId]) => {
@@ -863,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // NAVEGACIÓN POR SECCIONES (SCROLL CONTROLADO)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    const sections = ['hero-container', 'section2', 'section-3', 'section-4'];
+    const sections = ['hero-container', 'section2', 'section-3', 'section-contact', 'section-4'];
     let currentSectionIndex = 0;
     let isScrolling = false;
 
