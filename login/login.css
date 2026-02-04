@@ -1,0 +1,440 @@
+/* ===== ESTILOS GLOBALES ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', Courier, monospace;
+    background: #000;
+    color: #00ff00;
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* ===== FONDO MATRIX ===== */
+.matrix-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 1;
+}
+
+#matrixCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    opacity: 0.1;
+}
+
+/* ===== BOTÓN VOLVER AL INICIO ===== */
+.btn-back-home {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 200;
+    padding: 10px 20px;
+    background: rgba(0, 255, 0, 0.1);
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    text-decoration: none;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.btn-back-home:hover {
+    background: rgba(0, 255, 0, 0.2);
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    transform: translateY(-2px);
+}
+
+.btn-back-home:active {
+    transform: translateY(0);
+}
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
+.login-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+}
+
+/* ===== CAJA DE LOGIN ===== */
+.login-box {
+    background: rgba(0, 20, 10, 0.95);
+    border: 2px solid #00ff00;
+    box-shadow: 
+        0 0 10px rgba(0, 255, 0, 0.3),
+        inset 0 0 10px rgba(0, 255, 0, 0.1),
+        0 0 20px rgba(0, 0, 0, 0.9);
+    border-radius: 5px;
+    overflow: hidden;
+    animation: boxPulse 3s infinite;
+}
+
+@keyframes boxPulse {
+    0%, 100% {
+        box-shadow: 
+            0 0 10px rgba(0, 255, 0, 0.3),
+            inset 0 0 10px rgba(0, 255, 0, 0.1),
+            0 0 20px rgba(0, 0, 0, 0.9);
+    }
+    50% {
+        box-shadow: 
+            0 0 20px rgba(0, 255, 0, 0.5),
+            inset 0 0 15px rgba(0, 255, 0, 0.2),
+            0 0 30px rgba(0, 0, 0, 0.9);
+    }
+}
+
+/* ===== ENCABEZADO TERMINAL ===== */
+.terminal-header {
+    background: linear-gradient(90deg, #001a00, #003300);
+    border-bottom: 1px solid #00ff00;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.terminal-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #00ff00;
+    text-shadow: 0 0 5px #00ff00;
+}
+
+.terminal-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-close {
+    cursor: pointer;
+    color: #00ff00;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.btn-close:hover {
+    text-shadow: 0 0 10px #00ff00;
+    transform: scale(1.2);
+}
+
+/* ===== CONTENIDO TERMINAL ===== */
+.terminal-content {
+    padding: 40px 30px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* ===== TÍTULO ===== */
+.login-title {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: titleGlow 2s infinite alternate;
+}
+
+.login-title h1 {
+    font-size: 48px;
+    letter-spacing: 8px;
+    color: #00ff00;
+    text-shadow: 0 0 10px #00ff00, 0 0 20px #00aa00;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #00aa00;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+@keyframes titleGlow {
+    from {
+        text-shadow: 0 0 10px #00ff00, 0 0 20px #00aa00;
+    }
+    to {
+        text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00, 0 0 60px #00aa00;
+    }
+}
+
+/* ===== FORMULARIO ===== */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    position: relative;
+}
+
+.input-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #00ff00;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.label-text {
+    color: #00ff00;
+}
+
+.label-symbol {
+    animation: blink 1s infinite;
+    color: #00aa00;
+}
+
+@keyframes blink {
+    0%, 50%, 100% {
+        opacity: 1;
+    }
+    51%, 99% {
+        opacity: 0;
+    }
+}
+
+.input-field {
+    width: 100%;
+    background: rgba(0, 40, 20, 0.8);
+    border: none;
+    border-bottom: 1px solid #00ff00;
+    padding: 12px 10px;
+    color: #00ff00;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.input-field::placeholder {
+    color: #005500;
+}
+
+.input-field:focus {
+    background: rgba(0, 60, 30, 0.9);
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    text-shadow: 0 0 5px #00ff00;
+}
+
+.input-underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #00ff00, transparent);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.input-field:focus + .input-underline {
+    width: 100%;
+}
+
+/* ===== BARRA DE CARGA ===== */
+.loading-bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(0, 40, 20, 0.6);
+    border: 1px solid #00ff00;
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.loading-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff00, #00aa00, #00ff00);
+    width: 0%;
+    animation: loading 2s infinite;
+    box-shadow: 0 0 10px #00ff00;
+}
+
+@keyframes loading {
+    0% {
+        width: 0%;
+    }
+    50% {
+        width: 100%;
+    }
+    100% {
+        width: 100%;
+    }
+}
+
+/* ===== BOTÓN LOGIN ===== */
+.login-btn {
+    background: rgba(0, 255, 0, 0.1);
+    border: 2px solid #00ff00;
+    color: #00ff00;
+    padding: 12px 20px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-radius: 3px;
+}
+
+.login-btn:hover {
+    background: rgba(0, 255, 0, 0.2);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+    text-shadow: 0 0 10px #00ff00;
+}
+
+.login-btn:active {
+    transform: scale(0.98);
+}
+
+.btn-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(0, 255, 0, 0.3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.login-btn:active .btn-animation {
+    animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 300px;
+        height: 300px;
+        opacity: 0;
+    }
+}
+
+/* ===== MENSAJES ===== */
+.error-message {
+    background: rgba(255, 50, 50, 0.1);
+    border: 1px solid #ff3232;
+    color: #ff6b6b;
+    padding: 12px;
+    border-radius: 3px;
+    font-size: 12px;
+    text-align: center;
+    animation: slideDown 0.3s ease;
+}
+
+.success-message {
+    background: rgba(0, 255, 0, 0.1);
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    padding: 12px;
+    border-radius: 3px;
+    font-size: 12px;
+    text-align: center;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== PIE DE FORMULARIO ===== */
+.login-footer {
+    text-align: center;
+    border-top: 1px solid rgba(0, 255, 0, 0.3);
+    padding-top: 15px;
+}
+
+.login-footer p {
+    font-size: 11px;
+    color: #00aa00;
+    margin: 8px 0;
+}
+
+.footer-link {
+    color: #00ff00;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.footer-link:hover {
+    text-decoration: underline;
+    text-shadow: 0 0 10px #00ff00;
+}
+
+/* ===== PIE TERMINAL ===== */
+.terminal-footer {
+    background: linear-gradient(90deg, #001a00, #003300);
+    border-top: 1px solid #00ff00;
+    padding: 10px 15px;
+    text-align: center;
+    font-size: 10px;
+    color: #00aa00;
+    margin: -30px -30px -40px -30px;
+}
+
+.footer-text {
+    display: block;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+    .login-box {
+        border-radius: 0;
+    }
+
+    .login-title h1 {
+        font-size: 36px;
+        letter-spacing: 4px;
+    }
+
+    .terminal-content {
+        padding: 30px 20px;
+    }
+
+    .login-btn {
+        font-size: 11px;
+        padding: 10px 15px;
+    }
+}

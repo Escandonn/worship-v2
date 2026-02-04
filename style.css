@@ -136,7 +136,7 @@ nav {
     margin: 0 auto;
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 5px;
     flex-wrap: wrap; /* Soporte responsive */
 }
 
@@ -157,6 +157,16 @@ nav {
 .nav-item.sobre { text-shadow: 0 0 10px var(--color-sobre); }
 .nav-item.acerca { text-shadow: 0 0 10px var(--color-acerca); }
 .nav-item.contacto { text-shadow: 0 0 10px var(--color-contacto); }
+.nav-item.login { 
+    text-shadow: 0 0 10px var(--accent);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    margin-left: auto;
+}
 
 .nav-item:hover {
     transform: translateY(-5px) scale(1.1);
@@ -164,8 +174,14 @@ nav {
 
 /* Ajuste móvil para navbar */
 @media (max-width: 600px) {
-    .nav-container { gap: 10px; }
+    .nav-container { gap: 5px; flex-wrap: wrap; }
     .nav-item { font-size: 0.7rem; padding: 8px 12px; }
+    .nav-item.login { 
+        margin-left: 0;
+        width: 100%;
+        text-align: center;
+        order: 99;
+    }
 }
 
 /* --- INFO CARDS --- */
