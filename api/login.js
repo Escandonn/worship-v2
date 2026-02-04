@@ -21,43 +21,30 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    // Intentar iniciar sesión con email/password
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    // Buscar usuario en la tabla `users` por email
+    const { data: users, error: selectErr } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .limit(1)
+      .maybeSingle();
 
-    if (signInError) {
-      console.error('Sign-in error:', signInError);
-      return res.status(401).json({ error: signInError.message || 'Credenciales inválidas' });
+    if (selectErr) {
+      console.error('Select users error:', selectErr);
+      return res.status(500).json({ error: 'Error al consultar usuarios' });
     }
 
-    const user = data?.user || null;
+    if (!users) {
+      return res.status(401).json({ error: 'Usuario no encontrado' });
+    }
 
-    // Garantizar que exista una fila en la tabla `users` con este email
-    try {
-      const { data: existing, error: selectErr } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .limit(1)
-        .maybeSingle();
-
-      if (selectErr) console.error('Select users error:', selectErr);
-
-      if (!existing) {
-        const { error: insertErr } = await supabase.from('users').insert([
-          {
-            email: email,
-            created_at: new Date().toISOString(),
-            supabase_user_id: user?.id || null
-          }
-        ]);
-        if (insertErr) console.error('Insert users error:', insertErr);
-      }
-    } catch (dbErr) {
-      console.error('DB error ensuring users row:', dbErr);
+    // Comparar contraseña
+    if (users.password !== password) {
+      return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
 
     // Devolver info mínima al cliente
-    return res.status(200).json({ message: 'Login exitoso', user: { id: user?.id, email: user?.email } });
+    return res.status(200).json({ message: 'Login exitoso', user: { email: users.email } });
 
   } catch (err) {
     console.error('Login handler error:', err);
