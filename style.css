@@ -177,10 +177,11 @@ nav {
     .nav-container { gap: 5px; flex-wrap: wrap; }
     .nav-item { font-size: 0.7rem; padding: 8px 12px; }
     .nav-item.login { 
-        margin-left: 0;
-        width: 100%;
+        flex-basis: 100%;
         text-align: center;
-        order: 99;
+        padding: 8px 12px;
+        font-size: 0.7rem;
+        margin: 0 auto;
     }
 }
 
