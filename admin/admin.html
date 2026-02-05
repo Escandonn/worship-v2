@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // Protección de ruta: Si no hay sesión, volver al login
+        if (!localStorage.getItem('worship_session')) {
+            window.location.href = '../login/login.html';
+        }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worship | Admin Console</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Fuentes: Inter para UI limpia, JetBrains Mono para datos estilo código -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Fondo animado Matrix sutil -->
+    <div class="background-matrix"></div>
+    
+    <div class="app-container">
+        <!-- Sidebar estilo Apple Glass -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="triangle"></div>
+                <span>WORSHIP<br><small>ADMIN_V1</small></span>
+            </div>
+            <nav>
+                <a href="#" class="nav-link active" data-target="dashboard">Dashboard</a>
+                <a href="#" class="nav-link" data-target="leads">Leads</a>
+                <a href="#" class="nav-link" data-target="projects">Proyectos</a>
+                <a href="#" class="nav-link" data-target="settings">Sistema</a>
+            </nav>
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div class="info">
+                    <span class="name">Alejandro</span>
+                    <span class="status">Online :: Risp Connected</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 id="page-title">Dashboard</h1>
+                <button class="btn-primary" id="btn-add-new">+ NUEVO PROTOCOLO</button>
+            </header>
+
+            <div class="content-area glass-panel">
+                <div id="crud-container">
+                    <div class="table-header">
+                        <span>ID</span>
+                        <span>NOMBRE DEL PROYECTO</span>
+                        <span>ESTADO</span>
+                        <span>FECHA</span>
+                        <span>ACCIONES</span>
+                    </div>
+                    <div id="table-body">
+                        <!-- Las filas se generan en animaciones.js -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Flotante -->
+    <div id="modal-overlay" class="hidden">
+        <div class="modal glass-panel">
+            <h2 id="modal-title">Editar Registro</h2>
+            <form id="crud-form">
+                <div class="form-group">
+                    <label>Nombre del Proyecto</label>
+                    <input type="text" id="input-name" required placeholder="Ej: Rediseño Web Inmersivo">
+                </div>
+                <div class="form-group">
+                    <label>Estado del Sistema</label>
+                    <select id="input-status">
+                        <option value="Activo">Activo</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Finalizado">Finalizado</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="btn-cancel">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="animaciones.js"></script>
+</body>
+</html>

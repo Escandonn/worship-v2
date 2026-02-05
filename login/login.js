@@ -12,6 +12,12 @@
   function setText(el, txt) { if (!el) return; el.textContent = txt; }
 
   document.addEventListener('DOMContentLoaded', () => {
+    // Si ya hay sesión activa, ir directo al admin
+    if (localStorage.getItem('worship_session')) {
+      window.location.href = '../admin/admin.html';
+      return;
+    }
+
     const form = document.getElementById('loginForm');
     if (!form) return;
 
@@ -55,8 +61,10 @@
         setText(successMessage, 'Ingreso exitoso. Redirigiendo...');
         show(successMessage, true);
 
+        localStorage.setItem('worship_session', 'active');
+
         setTimeout(() => {
-          window.location.href = '../index.html';
+          window.location.href = '../admin/admin.html';
         }, 900);
 
       } catch (err) {
