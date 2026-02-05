@@ -7,6 +7,12 @@
         if (!localStorage.getItem('worship_session')) {
             window.location.replace('../login/login.html');
         }
+
+        // Bloquear botón "Atrás" para obligar a usar "Cerrar Sesión"
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function() {
+            window.history.pushState(null, "", window.location.href);
+        };
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Worship | Admin Console</title>

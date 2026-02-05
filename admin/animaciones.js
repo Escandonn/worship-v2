@@ -32,7 +32,7 @@ if (btnLogout) {
     btnLogout.addEventListener('click', (e) => {
         e.preventDefault();
         localStorage.removeItem('worship_session');
-        window.location.href = '../login/login.html';
+        window.location.replace('../login/login.html');
     });
 }
 
