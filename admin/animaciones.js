@@ -19,12 +19,22 @@ const form = document.getElementById('crud-form');
 const inputName = document.getElementById('input-name');
 const inputStatus = document.getElementById('input-status');
 const modalTitle = document.getElementById('modal-title');
+const btnLogout = document.getElementById('btn-logout');
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
     renderTable();
     initNavAnimations();
 });
+
+// --- LOGOUT ---
+if (btnLogout) {
+    btnLogout.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('worship_session');
+        window.location.href = '../login/login.html';
+    });
+}
 
 // --- LÓGICA CRUD ---
 

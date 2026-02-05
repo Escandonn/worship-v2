@@ -14,7 +14,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     // Si ya hay sesión activa, ir directo al admin
     if (localStorage.getItem('worship_session')) {
-      window.location.href = '../admin/admin.html';
+      window.location.replace('../admin/admin.html');
       return;
     }
 
@@ -64,7 +64,7 @@
         localStorage.setItem('worship_session', 'active');
 
         setTimeout(() => {
-          window.location.href = '../admin/admin.html';
+          window.location.replace('../admin/admin.html');
         }, 900);
 
       } catch (err) {

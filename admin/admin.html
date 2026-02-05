@@ -5,7 +5,7 @@
     <script>
         // Protección de ruta: Si no hay sesión, volver al login
         if (!localStorage.getItem('worship_session')) {
-            window.location.href = '../login/login.html';
+            window.location.replace('../login/login.html');
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,6 +30,7 @@
                 <a href="#" class="nav-link" data-target="leads">Leads</a>
                 <a href="#" class="nav-link" data-target="projects">Proyectos</a>
                 <a href="#" class="nav-link" data-target="settings">Sistema</a>
+                <a href="#" class="nav-link" id="btn-logout" style="color: #ff5555; margin-top: 20px;">Cerrar Sesión</a>
             </nav>
             <div class="user-profile">
                 <div class="avatar">A</div>
