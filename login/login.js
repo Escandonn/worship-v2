@@ -1,11 +1,3 @@
-/*
-  login.js
-  - Conexión a Supabase (cliente UMD cargado dinámicamente)
-  - Maneja el formulario #loginForm en login.html
-  - Intenta iniciar sesión; si tiene éxito, garantiza que exista una fila en la tabla "users"
-
-  IMPORTANT: Reemplaza SUPABASE_URL y SUPABASE_ANON_KEY con tus credenciales reales.
-*/
 
 (function () {
   function show(el, show = true) { if (!el) return; el.style.display = show ? '' : 'none'; }

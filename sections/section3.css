@@ -1,46 +1,87 @@
-#section3 {
+#section-3 {
     position: relative;
     width: 100%;
-    height: 120vh; /* Altura solicitada */
-    background-color: #080808; /* Fondo muy oscuro */
+    height: 100vh; /* Ajustado a pantalla completa para no salir de la sección */
+    background-color: #050505; /* Fondo muy oscuro coincidente con JS */
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Separa las franjas al tope y fondo */
     overflow: hidden;
-    border-top: 1px solid #333;
 }
 
-/* Franjas Matrix (Arriba y Abajo) */
-.matrix-strip {
-    position: relative;
+/* --- OVERLAY HUD PROFESIONAL --- */
+.sec3-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 10vh; /* 10% de altura de viewport (aprox, ajustado a vh global) */
-    background: #000;
-    overflow: hidden;
-    z-index: 1;
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
-    border-bottom: 1px solid #003300;
-}
-
-.matrix-strip.bottom {
-    border-bottom: none;
-    border-top: 1px solid #003300;
-}
-
-/* Contenido Central */
-.sec3-middle {
-    flex-grow: 1;
+    height: 100%;
+    pointer-events: none; /* Permite interactuar con el canvas 3D */
+    z-index: 10;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-between;
+    padding: 2rem 3rem;
+    background: radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.6) 100%);
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+}
+
+/* Líneas de escaneo sutiles para efecto monitor */
+.sec3-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 255, 0.03) 3px
+    );
+    z-index: -1;
+}
+
+.sec3-hud-top, .sec3-hud-bottom {
+    display: flex;
     align-items: center;
-    text-align: center;
-    padding: 20px;
-    background: radial-gradient(circle at center, #111 0%, #080808 100%);
+    gap: 1.5rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    color: rgba(0, 255, 255, 0.5);
+    text-transform: uppercase;
 }
 
-.sec3-title {
-    font-size: 4rem;
-    color: #fff;
-    text-transform: uppercase;
+.hud-line {
+    flex-grow: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+    position: relative;
+}
+
+.hud-line::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 3px;
+    background: rgba(0, 255, 255, 0.2);
+}
+
+.hud-text {
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .sec3-overlay {
+        padding: 1rem;
+    }
+    .sec3-hud-top, .sec3-hud-bottom {
+        font-size: 0.6rem;
+        gap: 0.5rem;
+    }
 }
