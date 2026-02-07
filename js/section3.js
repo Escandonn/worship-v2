@@ -280,12 +280,41 @@ function initCarousel(container) {
             });
             titleGeo.center();
 
-            // 2. Geometría de la Descripción (Párrafo)
-            const descGeo = new TextGeometry(data.desc, {
-                font: font, size: 0.6, height: 0.05, curveSegments: 4,
-                bevelEnabled: false
+            // 2. Geometría de la Descripción (Multi-línea para móvil)
+            const isMobile = container.clientWidth < 1025;
+            const maxChars = isMobile ? 25 : 60; // Menos caracteres por línea en móvil
+            const words = data.desc.split(' ');
+            let currentLine = words[0];
+            let lines = [];
+            
+            for (let w = 1; w < words.length; w++) {
+                if ((currentLine + " " + words[w]).length < maxChars) {
+                    currentLine += " " + words[w];
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[w];
+                }
+            }
+            lines.push(currentLine);
+
+            const descGroup = new THREE.Group();
+            let maxDescW = 0;
+            const lineHeight = 0.9;
+
+            lines.forEach((line, idx) => {
+                const lineGeo = new TextGeometry(line, {
+                    font: font, size: 0.6, height: 0.05, curveSegments: 4,
+                    bevelEnabled: false
+                });
+                lineGeo.center();
+                lineGeo.computeBoundingBox();
+                const lw = lineGeo.boundingBox.max.x - lineGeo.boundingBox.min.x;
+                if (lw > maxDescW) maxDescW = lw;
+
+                const lineMesh = new THREE.Mesh(lineGeo, textMat);
+                lineMesh.position.y = -idx * lineHeight;
+                descGroup.add(lineMesh);
             });
-            descGeo.center();
 
             const directions = ['top', 'bottom', 'left', 'right'];           
             const dir = directions[i % 4];
@@ -299,18 +328,16 @@ function initCarousel(container) {
             const titleMesh = new THREE.Mesh(titleGeo, textMat);
             titleMesh.position.y = 0.8; // Posicionar arriba
 
-            const descMesh = new THREE.Mesh(descGeo, textMat);
-            descMesh.position.y = -0.8; // Posicionar abajo
+            descGroup.position.y = -0.5; // Posicionar grupo de descripción abajo
 
             // Calcular ancho de tarjeta basado en el texto más ancho
             titleGeo.computeBoundingBox();
-            descGeo.computeBoundingBox();
             const tW = titleGeo.boundingBox.max.x - titleGeo.boundingBox.min.x;
-            const dW = descGeo.boundingBox.max.x - descGeo.boundingBox.min.x;
-            const maxW = Math.max(tW, dW);
+            const maxW = Math.max(tW, maxDescW);
 
             const cardWidth = maxW + 4; // Padding lateral
-            const cardHeight = 4.5;
+            // Altura dinámica basada en líneas de texto
+            const cardHeight = 3.5 + (lines.length * lineHeight);
             const cardGeo = new THREE.PlaneGeometry(cardWidth, cardHeight);
 
             // La tarjeta también cambia de color para mayor coherencia visual
@@ -329,7 +356,7 @@ function initCarousel(container) {
             cardMesh.position.z = -0.5;
 
             phraseGroup.add(titleMesh);
-            phraseGroup.add(descMesh);
+            phraseGroup.add(descGroup);
             phraseGroup.add(cardMesh);
             
             // OPTIMIZACIÓN: Orientar hacia la cámara solo una vez, ya que la cámara es estática.
@@ -370,10 +397,12 @@ function initCarousel(container) {
         
         fallingTexts.forEach(group => {
             if (isMobile) {
+                ringLeft.scale.set(0.65, 0.65, 0.65); // Anillo más pequeño en móvil
                 group.scale.set(0.65, 0.65, 0.65); // Letras más grandes en móvil
                 // Acelerar en móvil
                 if (group.userData.baseSpeed) group.userData.speed = group.userData.baseSpeed * 1.5; // Ajuste de velocidad móvil
             } else {
+                ringLeft.scale.set(1, 1, 1); // Anillo normal en PC
                 group.scale.set(0.8, 0.8, 0.8);       // Letras más pequeñas en PC
                 // Velocidad normal en PC
                 if (group.userData.baseSpeed) group.userData.speed = group.userData.baseSpeed * 1.5; // Ajuste de velocidad PC
@@ -429,7 +458,7 @@ function initCarousel(container) {
             else if (dir === 'right') group.position.x -= speed;
 
             const titleMesh = group.children[0];
-            const descMesh = group.children[1];
+            // const descGroup = group.children[1]; // Es un grupo, comparte material con titleMesh
             const cardMesh = group.children[2];
 
             // Calcular distancia al centro para determinar frase activa
@@ -461,27 +490,21 @@ function initCarousel(container) {
             if (isApproaching) {
                 // Acercándose: Visible
                 titleMesh.material.opacity = 1;
-                descMesh.material.opacity = 1;
                 cardMesh.material.opacity = 0.8;
                 titleMesh.material.emissiveIntensity = 0.5;
-                descMesh.material.emissiveIntensity = 0.5;
                 titleMesh.material.transparent = false;
-                descMesh.material.transparent = false;
             } else {
                 // Alejándose (Pasando por el anillo): Desvanecer hasta que salga el último caracter
                 const fadeProgress = Math.min(1, distToRing / halfWidth);
                 const opacity = 1 - fadeProgress;
 
                 titleMesh.material.transparent = true;
-                descMesh.material.transparent = true;
                 titleMesh.material.opacity = opacity;
-                descMesh.material.opacity = opacity;
                 cardMesh.material.opacity = opacity * 0.8; // La tarjeta se desvanece con el texto
                 
                 // Flash de luz antes de desaparecer
                 const flash = 0.5 + fadeProgress * 2;
                 titleMesh.material.emissiveIntensity = flash;
-                descMesh.material.emissiveIntensity = flash;
             }
 
             // Detectar cuál es la frase "activa" (la más cercana al centro) para posicionar los anillos
