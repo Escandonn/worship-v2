@@ -369,7 +369,7 @@ function initCarousel(container) {
         const isMobile = width < 1025;
         
         if (isMobile) {
-            ringLeft.scale.set(0.8, 0.8, 0.8); // Reducir tamaño solo en móvil
+            ringLeft.scale.set(0.7, 0.7, 0.7); // Reducir tamaño solo en móvil
         } else {
             ringLeft.scale.set(1, 1, 1); // Tamaño original en PC
         }
