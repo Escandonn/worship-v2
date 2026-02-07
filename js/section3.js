@@ -368,6 +368,12 @@ function initCarousel(container) {
         const width = container.clientWidth;
         const isMobile = width < 1025;
         
+        if (isMobile) {
+            ringLeft.scale.set(0.8, 0.8, 0.8); // Reducir tamaño solo en móvil
+        } else {
+            ringLeft.scale.set(1, 1, 1); // Tamaño original en PC
+        }
+
         fallingTexts.forEach(group => {
             if (isMobile) {
                 group.scale.set(0.65, 0.65, 0.65); // Letras más grandes en móvil
